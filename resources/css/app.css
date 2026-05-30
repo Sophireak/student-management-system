@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Report Sheet Styles ───────────────────────────────────────── */
+
+.report-th {
+    @apply px-3 py-3 text-center text-xs font-semibold
+           text-gray-500 uppercase tracking-wide;
+}
+
+.report-td {
+    @apply px-3 py-2 text-sm text-gray-700;
+}
+
+.report-cell {
+    @apply relative;
+}
+
+/* ── Cell Input Base ────────────────────────────────────────────── */
+.cell-input {
+    @apply w-full text-center text-sm border-0 bg-transparent
+           px-2 py-2 focus:outline-none focus:ring-2 focus:ring-inset
+           focus:ring-blue-400 transition-colors duration-100;
+}
+
+.cell-input[type="number"] {
+    -moz-appearance: textfield;
+}
+.cell-input[type="number"]::-webkit-inner-spin-button,
+.cell-input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+/* ── Cell States ────────────────────────────────────────────────── */
+.cell-empty {
+    @apply bg-white text-gray-400;
+}
+
+.cell-saved {
+    @apply bg-green-50 text-gray-800;
+}
+
+.cell-modified {
+    @apply bg-blue-50 text-blue-800 font-medium;
+}
+
+.cell-invalid {
+    @apply bg-red-50 text-red-700 ring-2 ring-inset ring-red-400;
+}
+
+.cell-locked {
+    @apply bg-gray-50 text-gray-500 cursor-not-allowed opacity-70;
+}
+
+/* ── Select override ────────────────────────────────────────────── */
+.cell-select {
+    @apply text-xs text-center;
+}
+
+/* ── Row highlight on focus ─────────────────────────────────────── */
+.report-row:focus-within {
+    @apply bg-blue-50/30;
+}
+
+/* ── Sticky shadows ─────────────────────────────────────────────── */
+#sheetContainer thead th:nth-child(2),
+#sheetContainer tbody td:nth-child(2) {
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.06);
+}
