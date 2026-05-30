@@ -1,58 +1,175 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏫 Primary School Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A practical web-based school management system built for **Cambodian government primary schools**. Designed to follow real school workflows — not generic LMS patterns.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+This system replaces paper-based and Excel-based school records with a clean, teacher-friendly digital workflow. It handles attendance, score entry, monthly reports, semester reports, and annual reports — all following the official Cambodian government school structure.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## ⚙️ Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 13 / PHP 8.3+ |
+| Frontend | Blade Templates + TailwindCSS |
+| Database | MySQL |
+| Authentication | Laravel Breeze |
+| Architecture | Simple MVC |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 👥 User Roles
 
-## Agentic Development
+### Admin
+- Manage academic years, grades, subjects
+- Manage teachers, students, classes, enrollments
+- View and manage all class reports
+- Lock / unlock score sheets
+- Manage attendance sessions
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Teacher
+- Access assigned classes only
+- Take attendance for assigned classes
+- Enter examination scores (monthly & semester)
+- View monthly, semester, and annual reports
+
+---
+
+## 📦 Modules
+
+| # | Module | Status |
+|---|---|---|
+| 1 | Authentication | ✅ Done |
+| 2 | Academic Years | ✅ Done |
+| 3 | Grades | ✅ Done |
+| 4 | Subjects | ✅ Done |
+| 5 | Teachers | ✅ Done |
+| 6 | Students | ✅ Done |
+| 7 | Classes | ✅ Done |
+| 8 | Enrollments | ✅ Done |
+| 9 | Teacher Assignments | ✅ Done |
+| 10 | Attendance | ✅ Done |
+| 11 | Examination Scores | ✅ Done |
+| 12 | Monthly Reports | ✅ Done |
+| 13 | Semester Reports | ✅ Done |
+| 14 | Annual Reports | ✅ Done |
+| 15 | Printing & Exports | 🔄 Planned |
+
+---
+
+## 🗄️ Database Structure
+
+### Core Tables
+- `users` — system accounts
+- `teachers` — teacher profiles
+- `students` — student profiles
+- `academic_years` — school years
+- `grades` — grade levels (Grade 1–6)
+- `classes` — class per grade per year
+- `enrollments` — students enrolled in classes
+- `class_teachers` — teacher assignments to classes
+- `attendance_sessions` — attendance date records
+- `attendances` — per-student attendance marks
+
+### Score & Report Tables
+- `monthly_scores` — per-student per-subject monthly scores
+- `semester_scores` — averaged semester scores with rank
+- `annual_scores` — yearly aggregated scores
+- `monthly_report_locks` — admin lock control for monthly sheets
+- `semester_report_locks` — admin lock control for semester sheets
+- `annual_report_locks` — admin lock control for annual sheets
+
+---
+
+## 🚀 Local Setup
+
+### Requirements
+- PHP 8.3+
+- Composer
+- MySQL
+- Node.js + NPM
+- Laravel 13
+
+### Installation
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone the repository
+git clone https://github.com/Sophireak/student-management-system.git
+cd student-management-system
 
-php artisan boost:install
+# 2. Install PHP dependencies
+composer install
+
+# 3. Install frontend dependencies
+npm install && npm run build
+
+# 4. Copy environment file
+cp .env.example .env
+
+# 5. Generate app key
+php artisan key:generate
+
+# 6. Configure your database in .env
+DB_DATABASE=school_management
+DB_USERNAME=root
+DB_PASSWORD=
+
+# 7. Run migrations
+php artisan migrate
+
+# 8. Seed initial data (optional)
+php artisan db:seed
+
+# 9. Start development server
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Visit `http://127.0.0.1:8000`
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 📁 Route Structure
 
-## Code of Conduct
+Routes are split into 3 files for clarity:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+routes/
+├── web.php        # Public root + requires admin & teacher routes
+├── admin.php      # All admin-only routes
+└── teacher.php    # All teacher-only routes
+```
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🔒 Security
 
-## License
+- Role-based middleware (`admin`, `teacher`)
+- Teachers can only access their assigned classes
+- Admins can lock score sheets to prevent edits
+- CSRF protection on all forms
+- Soft deletes on sensitive records
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🏗️ Architecture Notes
+
+- Students are **never** attached directly to classes
+- Correct flow: `students → enrollments → classes`
+- This enables yearly promotion, transfer history, and historical reports
+- Reports behave like **digital Excel sheets** — spreadsheet-style inline editing with bulk save
+
+---
+
+## 👨‍💻 Development Team
+
+> Add your team members here.
+
+---
+
+## 📄 License
+
+This project is for internal use by Cambodian government primary schools.
