@@ -8,19 +8,30 @@ use App\Http\Requests\UpdateTeacherRequest;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class TeacherController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $teachers = Teacher::with('user')
-            ->latest()
-            ->paginate(15);
+        $search = $request->input('search');
 
-        return view('admin.teachers.index', compact('teachers'));
+        $teachers = Teacher::with('user')
+            ->when($search, fn($q) =>
+                $q->whereHas('user', fn($u) =>
+                    $u->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                )
+                ->orWhere('employee_id', 'like', "%{$search}%")
+            )
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.teachers.index', compact('teachers', 'search'));
     }
 
     public function create(): View
@@ -31,7 +42,6 @@ class TeacherController extends Controller
     public function store(StoreTeacherRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            // Step 1 — create the user account
             $user = User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
@@ -39,7 +49,6 @@ class TeacherController extends Controller
                 'role'     => 'teacher',
             ]);
 
-            // Step 2 — create the teacher profile linked to the user
             Teacher::create([
                 'user_id'       => $user->id,
                 'employee_id'   => $request->employee_id,
@@ -72,20 +81,17 @@ class TeacherController extends Controller
     public function update(UpdateTeacherRequest $request, Teacher $teacher): RedirectResponse
     {
         DB::transaction(function () use ($request, $teacher) {
-            // Step 1 — update user account
             $userData = [
                 'name'  => $request->name,
                 'email' => $request->email,
             ];
 
-            // Only update password if provided
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
 
             $teacher->user->update($userData);
 
-            // Step 2 — update teacher profile
             $teacher->update([
                 'employee_id'   => $request->employee_id,
                 'phone'         => $request->phone,
@@ -102,7 +108,6 @@ class TeacherController extends Controller
 
     public function destroy(Teacher $teacher): RedirectResponse
     {
-        // Block deletion if teacher has active class assignments
         if ($teacher->classes()->exists()) {
             return redirect()
                 ->route('admin.teachers.index')
@@ -110,7 +115,6 @@ class TeacherController extends Controller
         }
 
         DB::transaction(function () use ($teacher) {
-            // Soft delete both the profile and the user account
             $teacher->user->delete();
             $teacher->delete();
         });

@@ -5,21 +5,32 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
-use App\Models\Student;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 use App\Models\AcademicYear;
 use App\Models\SchoolClass;
+use App\Models\Student;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $students = Student::orderBy('last_name')
-            ->orderBy('first_name')
-            ->paginate(20);
+        $search = $request->input('search');
 
-        return view('admin.students.index', compact('students'));
+        $students = Student::when($search, fn($q) =>
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('student_id', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
+            )
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.students.index', compact('students', 'search'));
     }
 
     public function create(): View
@@ -39,7 +50,6 @@ class StudentController extends Controller
             ->with('success', 'Student created successfully.');
     }
 
-
     public function show(Student $student): View
     {
         $student->load([
@@ -47,8 +57,6 @@ class StudentController extends Controller
             'enrollments.schoolClass.academicYear',
         ]);
 
-        // For each active enrollment, load classes from the same academic year
-        // (excluding the current class) for transfer
         $sameYearClasses = [];
         foreach ($student->enrollments->where('status', 'active') as $enrollment) {
             $sameYearClasses[$enrollment->id] = SchoolClass::with('grade')
@@ -59,7 +67,6 @@ class StudentController extends Controller
                 ->get();
         }
 
-        // Classes from all non-active academic years for promotion
         $activeYearId    = AcademicYear::where('is_active', true)->value('id');
         $nextYearClasses = SchoolClass::with(['grade', 'academicYear'])
             ->where('academic_year_id', '!=', $activeYearId)
@@ -68,8 +75,6 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get();
 
-        // If there's only one academic year, show active year classes too
-        // so admin can still promote within the system
         if ($nextYearClasses->isEmpty()) {
             $nextYearClasses = SchoolClass::with(['grade', 'academicYear'])
                 ->orderBy('grade_id')
@@ -91,7 +96,6 @@ class StudentController extends Controller
 
     public function update(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
-        // student_id is never updated — excluded from validated data
         $student->update($request->validated());
 
         return redirect()
@@ -101,7 +105,6 @@ class StudentController extends Controller
 
     public function destroy(Student $student): RedirectResponse
     {
-        // Block deletion if active enrollments exist
         if ($student->enrollments()->where('status', 'active')->exists()) {
             return redirect()
                 ->route('admin.students.index')

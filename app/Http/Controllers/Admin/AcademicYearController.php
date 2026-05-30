@@ -7,15 +7,23 @@ use App\Http\Requests\StoreAcademicYearRequest;
 use App\Http\Requests\UpdateAcademicYearRequest;
 use App\Models\AcademicYear;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AcademicYearController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $academicYears = AcademicYear::latest()->paginate(10);
+        $search = $request->input('search');
 
-        return view('admin.academic-years.index', compact('academicYears'));
+        $academicYears = AcademicYear::when($search, fn($q) =>
+                $q->where('name', 'like', "%{$search}%")
+            )
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.academic-years.index', compact('academicYears', 'search'));
     }
 
     public function create(): View
@@ -27,7 +35,6 @@ class AcademicYearController extends Controller
     {
         $data = $request->validated();
 
-        // If this year is set active, deactivate all others first
         if (! empty($data['is_active'])) {
             AcademicYear::where('is_active', true)->update(['is_active' => false]);
         }
@@ -64,7 +71,6 @@ class AcademicYearController extends Controller
 
     public function destroy(AcademicYear $academicYear): RedirectResponse
     {
-        // Block deletion if classes are attached
         if ($academicYear->classes()->exists()) {
             return redirect()
                 ->route('admin.academic-years.index')
@@ -78,12 +84,9 @@ class AcademicYearController extends Controller
             ->with('success', 'Academic year deleted successfully.');
     }
 
-    // Dedicated activate action — clean separation from update
     public function activate(AcademicYear $academicYear): RedirectResponse
     {
-        // Deactivate all, then activate the selected one
         AcademicYear::where('is_active', true)->update(['is_active' => false]);
-
         $academicYear->update(['is_active' => true]);
 
         return redirect()

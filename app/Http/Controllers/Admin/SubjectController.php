@@ -8,24 +8,35 @@ use App\Http\Requests\UpdateSubjectRequest;
 use App\Models\Grade;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SubjectController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search  = $request->input('search');
+        $gradeId = $request->input('grade_id');
+
         $subjects = Subject::with('grade')
+            ->when($search, fn($q) =>
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+            )
+            ->when($gradeId, fn($q) => $q->where('grade_id', $gradeId))
             ->orderBy('grade_id')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('admin.subjects.index', compact('subjects'));
+        $grades = Grade::orderBy('level')->get();
+
+        return view('admin.subjects.index', compact('subjects', 'grades', 'search', 'gradeId'));
     }
 
     public function create(): View
     {
         $grades = Grade::orderBy('level')->get();
-
         return view('admin.subjects.create', compact('grades'));
     }
 
@@ -41,7 +52,6 @@ class SubjectController extends Controller
     public function edit(Subject $subject): View
     {
         $grades = Grade::orderBy('level')->get();
-
         return view('admin.subjects.edit', compact('subject', 'grades'));
     }
 
@@ -56,18 +66,6 @@ class SubjectController extends Controller
 
     public function destroy(Subject $subject): RedirectResponse
     {
-        if ($subject->examSessions()->exists()) {
-            return redirect()
-                ->route('admin.subjects.index')
-                ->with('error', 'Cannot delete this subject because it has exam sessions.');
-        }
-
-        if ($subject->attendanceSessions()->exists()) {
-            return redirect()
-                ->route('admin.subjects.index')
-                ->with('error', 'Cannot delete this subject because it has attendance sessions.');
-        }
-
         $subject->delete();
 
         return redirect()
@@ -75,7 +73,6 @@ class SubjectController extends Controller
             ->with('success', 'Subject deleted successfully.');
     }
 
-    // No show() needed
     public function show(Subject $subject): RedirectResponse
     {
         return redirect()->route('admin.subjects.index');

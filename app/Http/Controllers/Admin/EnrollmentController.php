@@ -5,38 +5,51 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEnrollmentRequest;
 use App\Http\Requests\UpdateEnrollmentRequest;
+use App\Models\AcademicYear;
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 use Illuminate\Http\Request;
-use App\Models\AcademicYear;
+use Illuminate\View\View;
 
 class EnrollmentController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->input('search');
+        $status = $request->input('status');
+
         $enrollments = Enrollment::with([
             'student',
             'schoolClass.grade',
             'schoolClass.academicYear',
         ])
+            ->when(
+                $search,
+                fn($q) =>
+                $q->whereHas(
+                    'student',
+                    fn($s) =>
+                    $s->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('student_id', 'like', "%{$search}%")
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                        ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
+                )
+            )
+            ->when($status, fn($q) => $q->where('status', $status))
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.enrollments.index', compact('enrollments'));
+        return view('admin.enrollments.index', compact('enrollments', 'search', 'status'));
     }
 
     public function create(): View
     {
-        // Only active classes selectable for new enrollments
-        $classes  = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas(
-                'academicYear',
-                fn($q) =>
-                $q->where('is_active', true)
-            )
+        $classes = SchoolClass::with(['grade', 'academicYear'])
+            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
             ->orderBy('grade_id')
             ->orderBy('name')
             ->get();
@@ -68,14 +81,11 @@ class EnrollmentController extends Controller
             'student',
             'schoolClass.grade',
             'schoolClass.academicYear',
-            'scores.examSession.subject',
-            'attendances.attendanceSession.subject',
         ]);
 
         return view('admin.enrollments.show', compact('enrollment'));
     }
 
-    // Full edit not allowed — only status change is permitted
     public function edit(Enrollment $enrollment): View
     {
         $enrollment->load(['student', 'schoolClass.grade', 'schoolClass.academicYear']);
@@ -83,7 +93,6 @@ class EnrollmentController extends Controller
         return view('admin.enrollments.edit', compact('enrollment'));
     }
 
-    // Update redirects to status route — edit form only changes status
     public function update(UpdateEnrollmentRequest $request, Enrollment $enrollment): RedirectResponse
     {
         $enrollment->update(['status' => $request->status]);
@@ -104,12 +113,6 @@ class EnrollmentController extends Controller
 
     public function destroy(Enrollment $enrollment): RedirectResponse
     {
-        if ($enrollment->scores()->exists()) {
-            return redirect()
-                ->route('admin.enrollments.index')
-                ->with('error', 'Cannot delete this enrollment because it has scores recorded.');
-        }
-
         if ($enrollment->attendances()->exists()) {
             return redirect()
                 ->route('admin.enrollments.index')
@@ -122,26 +125,17 @@ class EnrollmentController extends Controller
             ->route('admin.enrollments.index')
             ->with('success', 'Enrollment removed successfully.');
     }
-    // ─── ADD these two methods to EnrollmentController ───────────────
-// Also add these use statements at the top if not already there:
-// use App\Models\AcademicYear;
 
-    /**
-     * Transfer student to a different class in the SAME academic year.
-     * Old enrollment → transferred, new enrollment → active.
-     */
     public function transfer(Request $request, Enrollment $enrollment): RedirectResponse
     {
         $request->validate([
-            'class_id' => ['required', 'exists:classes,id', 'different:current_class'],
+            'class_id' => ['required', 'exists:classes,id'],
         ]);
 
-        // Prevent transferring to the same class
         if ($request->class_id == $enrollment->class_id) {
             return back()->with('error', 'Student is already in this class.');
         }
 
-        // Prevent duplicate active enrollment in target class
         $exists = Enrollment::where('student_id', $enrollment->student_id)
             ->where('class_id', $request->class_id)
             ->where('status', 'active')
@@ -151,10 +145,8 @@ class EnrollmentController extends Controller
             return back()->with('error', 'Student already has an active enrollment in that class.');
         }
 
-        // Mark old enrollment as transferred
         $enrollment->update(['status' => 'transferred']);
 
-        // Create new active enrollment
         Enrollment::create([
             'student_id'  => $enrollment->student_id,
             'class_id'    => $request->class_id,
@@ -167,17 +159,12 @@ class EnrollmentController extends Controller
             ->with('success', 'Student transferred successfully.');
     }
 
-    /**
-     * Promote student to a class in the NEXT academic year.
-     * Old enrollment → transferred, new enrollment → active.
-     */
     public function promote(Request $request, Enrollment $enrollment): RedirectResponse
     {
         $request->validate([
             'class_id' => ['required', 'exists:classes,id'],
         ]);
 
-        // Prevent duplicate active enrollment in target class
         $exists = Enrollment::where('student_id', $enrollment->student_id)
             ->where('class_id', $request->class_id)
             ->where('status', 'active')
@@ -187,10 +174,8 @@ class EnrollmentController extends Controller
             return back()->with('error', 'Student already has an active enrollment in that class.');
         }
 
-        // Mark old enrollment as transferred
         $enrollment->update(['status' => 'transferred']);
 
-        // Create new active enrollment in new year/class
         Enrollment::create([
             'student_id'  => $enrollment->student_id,
             'class_id'    => $request->class_id,

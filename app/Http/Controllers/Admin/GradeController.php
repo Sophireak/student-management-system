@@ -7,17 +7,25 @@ use App\Http\Requests\StoreGradeRequest;
 use App\Http\Requests\UpdateGradeRequest;
 use App\Models\Grade;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class GradeController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $grades = Grade::withCount(['subjects', 'classes'])
-            ->orderBy('level')
-            ->paginate(10);
+        $search = $request->input('search');
 
-        return view('admin.grades.index', compact('grades'));
+        $grades = Grade::withCount(['subjects', 'classes'])
+            ->when($search, fn($q) =>
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('level', 'like', "%{$search}%")
+            )
+            ->orderBy('level')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.grades.index', compact('grades', 'search'));
     }
 
     public function create(): View
@@ -69,7 +77,6 @@ class GradeController extends Controller
             ->with('success', 'Grade deleted successfully.');
     }
 
-    // No show() — not needed for this module
     public function show(Grade $grade): RedirectResponse
     {
         return redirect()->route('admin.grades.index');

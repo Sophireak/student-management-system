@@ -9,20 +9,36 @@ use App\Models\AcademicYear;
 use App\Models\Grade;
 use App\Models\SchoolClass;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SchoolClassController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search   = $request->input('search');
+        $yearId   = $request->input('academic_year_id');
+
         $classes = SchoolClass::with(['academicYear', 'grade'])
             ->withCount('enrollments')
+            ->when($search, fn($q) =>
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('grade', fn($q2) =>
+                      $q2->where('name', 'like', "%{$search}%")
+                  )
+            )
+            ->when($yearId, fn($q) =>
+                $q->where('academic_year_id', $yearId)
+            )
             ->orderBy('academic_year_id', 'desc')
             ->orderBy('grade_id')
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.classes.index', compact('classes'));
+        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
+
+        return view('admin.classes.index', compact('classes', 'academicYears', 'search', 'yearId'));
     }
 
     public function create(): View
