@@ -5,13 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\SchoolClass;
-use App\Models\MonthlyReportLock;
-use App\Models\SemesterReportLock;
 use App\Services\MonthlyReportService;
 use App\Services\SemesterReportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class ExaminationScoreController extends Controller
 {
@@ -20,74 +18,53 @@ class ExaminationScoreController extends Controller
         private SemesterReportService $semester,
     ) {}
 
-    /** Parse "month_3" or "semester_2" into ['type'=>'month','value'=>3] */
-    private function parsePeriod(?string $period): array
-    {
-        if (! $period || ! str_contains($period, '_')) {
-            abort(422, 'Invalid period.');
-        }
-        [$type, $value] = explode('_', $period, 2);
-        if (! in_array($type, ['month', 'semester'])) abort(422, 'Invalid period type.');
-        return ['type' => $type, 'value' => (int) $value];
-    }
-
     public function index(): View
     {
-        $activeYear = AcademicYear::where('is_active', true)->first();
-
-        // Admin sees all classes from the active year only (same simplicity as teacher)
-        $classes = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
+        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
+        $classes       = SchoolClass::with(['grade', 'academicYear'])
+            ->orderBy('academic_year_id', 'desc')
             ->orderBy('grade_id')
             ->orderBy('name')
             ->get();
 
-        return view('examination-scores.index', compact('classes', 'activeYear'));
+        return view('examination-scores.index', compact('academicYears', 'classes'));
     }
 
     public function sheet(Request $request): View
     {
         $request->validate([
-            'class_id' => ['required', 'exists:classes,id'],
-            'period'   => ['required', 'string'],
+            'class_id'    => ['required', 'exists:classes,id'],
+            'period'      => ['required', 'string'],
         ]);
 
-        $p          = $this->parsePeriod($request->period);
-        $activeYear = AcademicYear::where('is_active', true)->firstOrFail();
-        $class      = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
+        // Parse period: "month_3" or "semester_1"
+        [$type, $value] = explode('_', $request->period, 2);
+
+        $class        = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
+        $activeYear   = AcademicYear::where('is_active', true)->firstOrFail();
 
         $classes = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
+            ->orderBy('academic_year_id', 'desc')
             ->orderBy('grade_id')
             ->orderBy('name')
             ->get();
 
         $selectedPeriod = $request->period;
 
-        if ($p['type'] === 'month') {
-            $isLocked = MonthlyReportLock::where('class_id', $class->id)
-                ->where('academic_year_id', $activeYear->id)
-                ->where('month', $p['value'])
-                ->exists();
-
-            $sheet = $this->monthly->buildSheet($class, $p['value'], $activeYear->id);
+        if ($type === 'month') {
+            $sheet = $this->monthly->buildSheet($class, (int) $value, $activeYear->id);
             return view('examination-scores.monthly-sheet', array_merge(
                 $sheet,
-                compact('activeYear', 'classes', 'selectedPeriod', 'isLocked'),
-                ['routePrefix' => 'admin', 'academicYear' => $activeYear]
+                compact('activeYear', 'classes', 'selectedPeriod'),
+                ['academicYear' => $activeYear]
             ));
         }
 
-        $isLocked = SemesterReportLock::where('class_id', $class->id)
-            ->where('academic_year_id', $activeYear->id)
-            ->where('semester', $p['value'])
-            ->exists();
-
-        $sheet = $this->semester->buildSheet($class, $p['value'], $activeYear->id);
+        $sheet = $this->semester->buildSheet($class, (int) $value, $activeYear->id);
         return view('examination-scores.semester-sheet', array_merge(
             $sheet,
-            compact('activeYear', 'classes', 'selectedPeriod', 'isLocked'),
-            ['routePrefix' => 'admin', 'academicYear' => $activeYear]
+            compact('activeYear', 'classes', 'selectedPeriod'),
+            ['academicYear' => $activeYear]
         ));
     }
 
@@ -141,97 +118,59 @@ class ExaminationScoreController extends Controller
             ($result['skipped'] > 0 ? " {$result['skipped']} empty cell(s) skipped." : ''));
     }
 
-    public function lockMonthly(Request $request): RedirectResponse
+    public function lock(Request $request): RedirectResponse
     {
         $request->validate([
-            'class_id' => ['required', 'exists:classes,id'],
-            'month'    => ['required', 'integer', 'min:1', 'max:9'],
+            'class_id'         => ['required', 'exists:classes,id'],
+            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'period_type'      => ['required', 'in:month,semester'],
+            'month'            => ['required_if:period_type,month', 'nullable', 'integer', 'min:1', 'max:9'],
+            'semester'         => ['required_if:period_type,semester', 'nullable', 'integer', 'in:1,2'],
         ]);
 
-        $activeYear = AcademicYear::where('is_active', true)->firstOrFail();
+        if ($request->period_type === 'month') {
+            $this->monthly->lockReport(
+                $request->class_id,
+                $request->academic_year_id,
+                $request->month,
+                auth()->id()
+            );
+        } else {
+            $this->semester->lockReport(
+                $request->class_id,
+                $request->academic_year_id,
+                $request->semester,
+                auth()->id()
+            );
+        }
 
-        MonthlyReportLock::firstOrCreate(
-            [
-                'class_id'        => $request->class_id,
-                'academic_year_id'=> $activeYear->id,
-                'month'           => $request->month,
-            ],
-            [
-                'locked_by' => auth()->id(),
-                'locked_at' => now(),
-            ]
-        );
-
-        return redirect()->route('admin.examination-scores.sheet', [
-            'class_id' => $request->class_id,
-            'period'   => 'month_' . $request->month,
-        ])->with('success', 'Report locked.');
+        return redirect()->back()->with('success', 'Score sheet locked successfully.');
     }
 
-    public function unlockMonthly(Request $request): RedirectResponse
+    public function unlock(Request $request): RedirectResponse
     {
         $request->validate([
-            'class_id' => ['required', 'exists:classes,id'],
-            'month'    => ['required', 'integer', 'min:1', 'max:9'],
+            'class_id'         => ['required', 'exists:classes,id'],
+            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'period_type'      => ['required', 'in:month,semester'],
+            'month'            => ['required_if:period_type,month', 'nullable', 'integer', 'min:1', 'max:9'],
+            'semester'         => ['required_if:period_type,semester', 'nullable', 'integer', 'in:1,2'],
         ]);
 
-        $activeYear = AcademicYear::where('is_active', true)->firstOrFail();
+        if ($request->period_type === 'month') {
+            $this->monthly->unlockReport(
+                $request->class_id,
+                $request->academic_year_id,
+                $request->month
+            );
+        } else {
+            $this->semester->unlockReport(
+                $request->class_id,
+                $request->academic_year_id,
+                $request->semester
+            );
+        }
 
-        MonthlyReportLock::where('class_id', $request->class_id)
-            ->where('academic_year_id', $activeYear->id)
-            ->where('month', $request->month)
-            ->delete();
-
-        return redirect()->route('admin.examination-scores.sheet', [
-            'class_id' => $request->class_id,
-            'period'   => 'month_' . $request->month,
-        ])->with('success', 'Report unlocked.');
-    }
-
-    public function lockSemester(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'class_id' => ['required', 'exists:classes,id'],
-            'semester' => ['required', 'integer', 'in:1,2'],
-        ]);
-
-        $activeYear = AcademicYear::where('is_active', true)->firstOrFail();
-
-        SemesterReportLock::firstOrCreate(
-            [
-                'class_id'        => $request->class_id,
-                'academic_year_id'=> $activeYear->id,
-                'semester'        => $request->semester,
-            ],
-            [
-                'locked_by' => auth()->id(),
-                'locked_at' => now(),
-            ]
-        );
-
-        return redirect()->route('admin.examination-scores.sheet', [
-            'class_id' => $request->class_id,
-            'period'   => 'semester_' . $request->semester,
-        ])->with('success', 'Report locked.');
-    }
-
-    public function unlockSemester(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'class_id' => ['required', 'exists:classes,id'],
-            'semester' => ['required', 'integer', 'in:1,2'],
-        ]);
-
-        $activeYear = AcademicYear::where('is_active', true)->firstOrFail();
-
-        SemesterReportLock::where('class_id', $request->class_id)
-            ->where('academic_year_id', $activeYear->id)
-            ->where('semester', $request->semester)
-            ->delete();
-
-        return redirect()->route('admin.examination-scores.sheet', [
-            'class_id' => $request->class_id,
-            'period'   => 'semester_' . $request->semester,
-        ])->with('success', 'Report unlocked.');
+        return redirect()->back()->with('success', 'Score sheet unlocked successfully.');
     }
 }
