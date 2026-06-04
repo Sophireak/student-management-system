@@ -33,9 +33,8 @@
         <x-admin.nav-item route="admin.examination-scores.index" icon="📝" label="Examination Scores" />
 
         <div class="pt-4 pb-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Reports</div>
-        <x-admin.nav-item route="admin.monthly-report.index"  icon="📅" label="Monthly Reports" />
-        <x-admin.nav-item route="admin.semester-report.index" icon="📊" label="Semester Reports" />
-        <x-admin.nav-item route="admin.annual-report.index"   icon="🏆" label="Annual Report" />
+        <x-admin.nav-item route="admin.reports.ranking.index" icon="📊" label="Ranking Report" />
+        <x-admin.nav-item route="admin.reports.honors.index"  icon="🏅" label="Honors Report" />
 
     </nav>
 

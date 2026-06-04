@@ -9,6 +9,7 @@ use App\Http\Controllers\Teacher\ExaminationScoreController;
 use App\Http\Controllers\Teacher\MonthlyReportController;
 use App\Http\Controllers\Teacher\SemesterReportController;
 use App\Http\Controllers\Teacher\AnnualReportController;
+use App\Http\Controllers\Teacher\ReportController;
 
 Route::middleware(['auth', 'verified', 'teacher'])
     ->prefix('teacher')
@@ -16,8 +17,7 @@ Route::middleware(['auth', 'verified', 'teacher'])
     ->group(function () {
 
         // ── Dashboard ────────────────────────────────────────────
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // ── Student Attendance ────────────────────────────────────
         Route::prefix('student-attendance')->name('student-attendance.')->group(function () {
@@ -34,22 +34,26 @@ Route::middleware(['auth', 'verified', 'teacher'])
             Route::post('/save-semester', [ExaminationScoreController::class, 'saveSemester']) ->name('save-semester');
         });
 
-        // ── Monthly Reports ───────────────────────────────────────
+        // ── Score Entry ───────────────────────────────────────────
         Route::prefix('monthly-report')->name('monthly-report.')->group(function () {
             Route::get('/',      [MonthlyReportController::class, 'index']) ->name('index');
             Route::get('/sheet', [MonthlyReportController::class, 'show'])  ->name('show');
             Route::post('/save', [MonthlyReportController::class, 'save'])  ->name('save');
         });
-
-        // ── Semester Reports ──────────────────────────────────────
         Route::prefix('semester-report')->name('semester-report.')->group(function () {
             Route::get('/',      [SemesterReportController::class, 'index']) ->name('index');
             Route::get('/sheet', [SemesterReportController::class, 'show'])  ->name('show');
         });
-
-        // ── Annual Report ─────────────────────────────────────────
         Route::prefix('annual-report')->name('annual-report.')->group(function () {
             Route::get('/',      [AnnualReportController::class, 'index']) ->name('index');
             Route::get('/sheet', [AnnualReportController::class, 'show'])  ->name('show');
+        });
+
+        // ── Reports ───────────────────────────────────────────────
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/ranking',       [ReportController::class, 'rankingIndex']) ->name('ranking.index');
+            Route::get('/ranking/sheet', [ReportController::class, 'rankingSheet']) ->name('ranking.sheet');
+            Route::get('/honors',        [ReportController::class, 'honorsIndex'])  ->name('honors.index');
+            Route::get('/honors/sheet',  [ReportController::class, 'honorsSheet'])  ->name('honors.sheet');
         });
     });
