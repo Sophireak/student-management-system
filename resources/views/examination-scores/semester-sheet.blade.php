@@ -5,7 +5,6 @@
 @php
     $routePrefix = auth()->user()->isAdmin() ? 'admin' : 'teacher';
     $isAdmin     = auth()->user()->isAdmin();
-    $saveRoute   = route($routePrefix . '.examination-scores.save-semester');
 @endphp
 
 {{-- Header --}}
@@ -16,9 +15,44 @@
         <h2 class="text-lg font-semibold text-gray-700 mt-1">
             {{ $class->name }} · {{ $class->grade->name }}
         </h2>
-        <p class="text-sm text-gray-400 mt-0.5">
-            {{ $semesterLabel }} · {{ $academicYear->name }}
-        </p>
+        <p class="text-sm text-gray-400">{{ $semesterLabel }} · {{ $academicYear->name }}</p>
+    </div>
+
+    <div class="flex items-center gap-2">
+        @if ($isLocked)
+            <span class="px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
+                🔒 Locked
+            </span>
+            @if ($isAdmin)
+                <form method="POST" action="{{ route('admin.examination-scores.unlock') }}">
+                    @csrf
+                    <input type="hidden" name="class_id"         value="{{ $class->id }}">
+                    <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
+                    <input type="hidden" name="period_type"      value="semester">
+                    <input type="hidden" name="semester"         value="{{ $semester }}">
+                    <button type="submit"
+                            class="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-700
+                                   border border-yellow-300 rounded-md hover:bg-yellow-200">
+                        🔓 Unlock
+                    </button>
+                </form>
+            @endif
+        @else
+            @if ($isAdmin)
+                <form method="POST" action="{{ route('admin.examination-scores.lock') }}">
+                    @csrf
+                    <input type="hidden" name="class_id"         value="{{ $class->id }}">
+                    <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
+                    <input type="hidden" name="period_type"      value="semester">
+                    <input type="hidden" name="semester"         value="{{ $semester }}">
+                    <button type="submit"
+                            class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-600
+                                   border border-gray-300 rounded-md hover:bg-gray-200">
+                        🔒 Lock Sheet
+                    </button>
+                </form>
+            @endif
+        @endif
     </div>
 </div>
 
@@ -28,113 +62,75 @@
     </div>
 @endif
 
-{{-- Single-row filter + lock icon --}}
+{{-- Filter bar --}}
 <div class="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
-    <div class="flex flex-wrap items-end gap-3">
+    <form method="GET"
+          action="{{ route($routePrefix . '.examination-scores.sheet') }}"
+          id="filter-form"
+          class="flex flex-wrap items-end gap-3">
 
-        <form method="GET"
-              action="{{ route($routePrefix . '.examination-scores.sheet') }}"
-              id="filter-form"
-              class="flex flex-wrap items-end gap-3">
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Class</label>
+            <select name="class_id" id="sel-class"
+                    class="border border-gray-300 rounded px-2 py-1.5 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-blue-400">
+                @foreach ($classes as $cls)
+                    <option value="{{ $cls->id }}" {{ $cls->id === $class->id ? 'selected' : '' }}>
+                        {{ $cls->name }} ({{ $cls->grade->name }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-            <div>
-                <label class="block text-xs text-gray-500 mb-1">Class</label>
-                <select name="class_id" id="sel-class"
-                        class="border border-gray-300 rounded px-2 py-1.5 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-40">
-                    @foreach ($classes as $cls)
-                        <option value="{{ $cls->id }}"
-                            {{ $cls->id === $class->id ? 'selected' : '' }}>
-                            {{ $cls->name }} ({{ $cls->grade->name }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Period</label>
+            <select name="period_type" id="sel-period-type"
+                    class="border border-gray-300 rounded px-2 py-1.5 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="month">Monthly</option>
+                <option value="semester" selected>Semester</option>
+            </select>
+        </div>
 
-            <div>
-                <label class="block text-xs text-gray-500 mb-1">Period</label>
-                <select name="period" id="sel-period"
-                        class="border border-gray-300 rounded px-2 py-1.5 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-48">
-                    <optgroup label="Monthly">
-                        @foreach ([1=>'September',2=>'October',3=>'November',4=>'December',5=>'January',6=>'February',7=>'March',8=>'April',9=>'May'] as $num => $name)
-                            <option value="month_{{ $num }}"
-                                {{ $selectedPeriod === 'month_'.$num ? 'selected' : '' }}>
-                                Month {{ $num }} — {{ $name }}
-                            </option>
-                        @endforeach
-                    </optgroup>
-                    <optgroup label="Semester">
-                        <option value="semester_1" {{ $selectedPeriod === 'semester_1' ? 'selected' : '' }}>
-                            Semester 1 (Sep – Jan)
-                        </option>
-                        <option value="semester_2" {{ $selectedPeriod === 'semester_2' ? 'selected' : '' }}>
-                            Semester 2 (Feb – May)
-                        </option>
-                    </optgroup>
-                </select>
-            </div>
+        <div id="group-month" class="hidden">
+            <label class="block text-xs text-gray-500 mb-1">Month</label>
+            <select name="month" id="sel-month"
+                    class="border border-gray-300 rounded px-2 py-1.5 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-blue-400">
+                @foreach ([1=>'September',2=>'October',3=>'November',4=>'December',5=>'January',6=>'February',7=>'March',8=>'April',9=>'May'] as $n => $name)
+                    <option value="{{ $n }}">{{ $name }}</option>
+                @endforeach
+            </select>
+        </div>
 
-        </form>
+        <div id="group-semester">
+            <label class="block text-xs text-gray-500 mb-1">Semester</label>
+            <select name="semester" id="sel-semester"
+                    class="border border-gray-300 rounded px-2 py-1.5 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="1" {{ $semester === 1 ? 'selected' : '' }}>Semester 1 (Sep – Jan)</option>
+                <option value="2" {{ $semester === 2 ? 'selected' : '' }}>Semester 2 (Feb – May)</option>
+            </select>
+        </div>
 
-        @if ($isAdmin)
-            <div class="ml-auto flex items-end">
-                @if ($isLocked)
-                    <form method="POST" action="{{ route('admin.examination-scores.unlock-semester') }}">
-                        @csrf
-                        <input type="hidden" name="class_id" value="{{ $class->id }}">
-                        <input type="hidden" name="semester" value="{{ $semester }}">
-                        <button type="submit"
-                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-                                       bg-red-50 border border-red-200 text-red-700 rounded
-                                       hover:bg-red-100 transition-colors">
-                            🔒 Locked — Click to Unlock
-                        </button>
-                    </form>
-                @else
-                    <form method="POST" action="{{ route('admin.examination-scores.lock-semester') }}">
-                        @csrf
-                        <input type="hidden" name="class_id" value="{{ $class->id }}">
-                        <input type="hidden" name="semester" value="{{ $semester }}">
-                        <button type="submit"
-                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-                                       bg-gray-50 border border-gray-200 text-gray-500 rounded
-                                       hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-700
-                                       transition-colors">
-                            🔓 Unlocked — Click to Lock
-                        </button>
-                    </form>
-                @endif
-            </div>
-        @else
-            @if ($isLocked)
-                <div class="ml-auto flex items-end">
-                    <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded">
-                        🔒 Locked by Admin
-                    </span>
-                </div>
-            @endif
-        @endif
-
-    </div>
+    </form>
 </div>
 
 @if ($enrollments->isEmpty())
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8
-                text-center text-gray-400 text-sm">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8 text-center text-gray-400 text-sm">
         No active students in this class.
     </div>
 @elseif ($subjects->isEmpty())
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8
-                text-center text-gray-400 text-sm">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8 text-center text-gray-400 text-sm">
         No subjects configured for {{ $class->grade->name }}.
     </div>
 @else
 
-    <form method="POST" action="{{ $saveRoute }}">
+    <form method="POST" action="{{ route($routePrefix . '.examination-scores.save-semester') }}">
         @csrf
-        <input type="hidden" name="class_id" value="{{ $class->id }}">
-        <input type="hidden" name="semester" value="{{ $semester }}">
+        <input type="hidden" name="class_id"         value="{{ $class->id }}">
+        <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
+        <input type="hidden" name="semester"         value="{{ $semester }}">
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -142,7 +138,7 @@
                     <tr>
                         <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500
                                    uppercase border-r border-gray-200 w-8
-                                   sticky left-0 bg-gray-50 z-10">No.</th>
+                                   sticky left-0 bg-gray-50 z-10">#</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500
                                    uppercase border-r border-gray-200 w-48
                                    sticky left-8 bg-gray-50 z-10">Student Name</th>
@@ -159,7 +155,7 @@
                             </th>
                         @endforeach
                         <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase border-r border-gray-100 min-w-20">Total</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase border-r border-gray-100 min-w-20">Average</th>
+                        <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase border-r border-gray-100 min-w-20">Avg</th>
                         <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase min-w-16">Rank</th>
                     </tr>
                 </thead>
@@ -189,8 +185,8 @@
                                         <input type="number"
                                                name="scores[{{ $inputKey }}][score]"
                                                value="{{ $existing?->score }}"
-                                               min="0" max="{{ $subject->max_score }}"
-                                               step="0.5" placeholder="—"
+                                               min="0" max="{{ $subject->max_score }}" step="0.5"
+                                               placeholder="—"
                                                {{ $isLocked ? 'readonly' : '' }}
                                                data-row="{{ $rowIndex }}" data-col="{{ $colIndex }}"
                                                class="score-input w-20 text-center border rounded px-1 py-1 text-sm
@@ -205,7 +201,7 @@
                                                        focus:outline-none focus:ring-2 focus:ring-blue-400
                                                        {{ $hasValue ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200' }}">
                                             <option value="">—</option>
-                                            @foreach (['Good', 'Satisfactory', 'Needs Improvement'] as $g)
+                                            @foreach (['Good','Satisfactory','Needs Improvement'] as $g)
                                                 <option value="{{ $g }}" {{ $existing?->grade === $g ? 'selected' : '' }}>{{ $g }}</option>
                                             @endforeach
                                         </select>
@@ -223,7 +219,6 @@
                                     @endif
                                 </td>
                             @endforeach
-
                             @php $sum = $summary[$enrollment->id] ?? []; @endphp
                             <td class="px-3 py-2 text-center text-sm text-gray-700 border-r border-gray-100">{{ $sum['total'] ?? '—' }}</td>
                             <td class="px-3 py-2 text-center text-sm text-gray-700 border-r border-gray-100">{{ $sum['average'] ?? '—' }}</td>
@@ -238,8 +233,8 @@
             <div class="mt-4 flex items-center justify-between bg-white rounded-lg
                         shadow-sm border border-gray-200 px-5 py-4">
                 <p class="text-xs text-gray-400">
-                    Green cells are already saved. Empty cells will be skipped.
-                    Total, Average, and Rank are auto-calculated after save.
+                    Green cells already saved. Empty cells skipped.
+                    Total, Average and Rank auto-calculated after save.
                 </p>
                 <button type="submit"
                         class="px-6 py-2 bg-blue-600 text-white text-sm font-medium
@@ -249,7 +244,7 @@
             </div>
         @else
             <div class="mt-4 px-5 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                🔒 This report has been locked by the administrator.
+                🔒 This sheet has been locked by the administrator. No edits allowed.
             </div>
         @endif
     </form>
@@ -260,13 +255,29 @@
 document.addEventListener('DOMContentLoaded', function () {
     const form      = document.getElementById('filter-form');
     const selClass  = document.getElementById('sel-class');
-    const selPeriod = document.getElementById('sel-period');
+    const selPeriod = document.getElementById('sel-period-type');
+    const selMonth  = document.getElementById('sel-month');
+    const selSem    = document.getElementById('sel-semester');
+    const grpMonth  = document.getElementById('group-month');
+    const grpSem    = document.getElementById('group-semester');
+
+    function togglePeriod() {
+        const isMonth = selPeriod.value === 'month';
+        grpMonth.classList.toggle('hidden', !isMonth);
+        grpSem.classList.toggle('hidden', isMonth);
+    }
 
     function trySubmit() {
-        if (selClass.value && selPeriod.value) form.submit();
+        const classOk = selClass.value !== '';
+        const monthOk = selPeriod.value === 'month' && selMonth.value !== '';
+        const semOk   = selPeriod.value === 'semester' && selSem.value !== '';
+        if (classOk && (monthOk || semOk)) form.submit();
     }
+
+    selPeriod.addEventListener('change', function () { togglePeriod(); trySubmit(); });
     selClass.addEventListener('change', trySubmit);
-    selPeriod.addEventListener('change', trySubmit);
+    selMonth.addEventListener('change', trySubmit);
+    selSem.addEventListener('change', trySubmit);
 
     const inputs    = document.querySelectorAll('.score-input:not([readonly]):not([disabled])');
     const totalCols = {{ $subjects->count() }};
@@ -299,9 +310,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (next) { next.focus(); if (next.select) next.select(); }
             });
         }
-
         input.addEventListener('change', function () {
-            const empty = this.value === '' || this.value === null;
+            const empty = this.value === '';
             this.classList.toggle('bg-green-50', !empty);
             this.classList.toggle('border-green-200', !empty);
             this.classList.toggle('bg-white', empty);

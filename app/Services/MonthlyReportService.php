@@ -12,29 +12,21 @@ use Illuminate\Support\Facades\DB;
 
 class MonthlyReportService
 {
-    // ----------------------------------------------------------------
-    // LOAD SHEET DATA
-    // 3 queries total regardless of class or subject count.
-    // ----------------------------------------------------------------
     public function buildSheet(
         SchoolClass $class,
         int $month,
         int $academicYearId
     ): array {
-        // Query 1 — enrolled students for this class
         $enrollments = Enrollment::with('student')
             ->where('class_id', $class->id)
             ->where('status', 'active')
             ->orderBy('id')
             ->get();
 
-        // Query 2 — subjects for this grade, ordered for display
         $subjects = Subject::where('grade_id', $class->grade_id)
                            ->orderBy('name')
                            ->get();
 
-        // Query 3 — all existing scores for this class+month+year
-        // Keyed as enrollment_id:subject_id for O(1) lookup
         $enrollmentIds = $enrollments->pluck('id');
 
         $existing = MonthlyScore::whereIn('enrollment_id', $enrollmentIds)
@@ -43,17 +35,14 @@ class MonthlyReportService
             ->get()
             ->keyBy(fn($s) => "{$s->enrollment_id}:{$s->subject_id}");
 
-        // Build matrix in PHP — zero additional queries
         $matrix = [];
         foreach ($enrollments as $enrollment) {
             foreach ($subjects as $subject) {
                 $key = "{$enrollment->id}:{$subject->id}";
-                $matrix[$enrollment->id][$subject->id] =
-                    $existing->get($key);
+                $matrix[$enrollment->id][$subject->id] = $existing->get($key);
             }
         }
 
-        // Check lock status — Query 4 (single row lookup)
         $isLocked = MonthlyReportLock::where('class_id', $class->id)
             ->where('academic_year_id', $academicYearId)
             ->where('month', $month)
@@ -71,11 +60,6 @@ class MonthlyReportService
         ];
     }
 
-    // ----------------------------------------------------------------
-    // BULK SAVE — UPSERT PER SUBJECT GROUP
-    // Groups incoming data by subject.
-    // One upsert call per subject = minimal DB round trips.
-    // ----------------------------------------------------------------
     public function saveSheet(
         int $classId,
         int $academicYearId,
@@ -86,13 +70,11 @@ class MonthlyReportService
         $saved   = 0;
         $skipped = 0;
 
-        // Verify class has active enrollments
         $validEnrollmentIds = Enrollment::where('class_id', $classId)
             ->where('status', 'active')
             ->pluck('id')
-            ->flip(); // flip for O(1) isset() check
+            ->flip();
 
-        // Group by subject for batch upsert
         $grouped = collect($scores)->groupBy('subject_id');
 
         DB::transaction(function () use (
@@ -108,16 +90,20 @@ class MonthlyReportService
                 $upsertData = [];
 
                 foreach ($rows as $row) {
-                    // Skip rows not belonging to this class
                     if (! isset($validEnrollmentIds[$row['enrollment_id']])) {
                         $skipped++;
                         continue;
                     }
 
+                    // Use ?? so missing keys default to null safely
+                    $score    = $row['score']     ?? null;
+                    $grade    = $row['grade']     ?? null;
+                    $passFail = $row['pass_fail'] ?? null;
+
                     // Skip completely empty rows
-                    $hasValue = ($row['score'] !== null && $row['score'] !== '')
-                        || ($row['grade'] !== null && $row['grade'] !== '')
-                        || ($row['pass_fail'] !== null && $row['pass_fail'] !== '');
+                    $hasValue = ($score !== null && $score !== '')
+                        || ($grade !== null && $grade !== '')
+                        || ($passFail !== null && $passFail !== '');
 
                     if (! $hasValue) {
                         $skipped++;
@@ -125,17 +111,17 @@ class MonthlyReportService
                     }
 
                     $upsertData[] = [
-                        'enrollment_id'   => $row['enrollment_id'],
-                        'subject_id'      => $subjectId,
-                        'academic_year_id'=> $academicYearId,
-                        'month'           => $month,
-                        'score'           => $row['score'] !== ''
-                            ? (float) $row['score'] : null,
-                        'grade'           => $row['grade'] ?? null,
-                        'pass_fail'       => $row['pass_fail'] ?? null,
-                        'entered_by'      => $enteredBy,
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
+                        'enrollment_id'    => $row['enrollment_id'],
+                        'subject_id'       => $subjectId,
+                        'academic_year_id' => $academicYearId,
+                        'month'            => $month,
+                        'score'            => ($score !== null && $score !== '')
+                            ? (float) $score : null,
+                        'grade'            => $grade,
+                        'pass_fail'        => $passFail,
+                        'entered_by'       => $enteredBy,
+                        'created_at'       => now(),
+                        'updated_at'       => now(),
                     ];
 
                     $saved++;
@@ -144,9 +130,7 @@ class MonthlyReportService
                 if (! empty($upsertData)) {
                     DB::table('monthly_scores')->upsert(
                         $upsertData,
-                        // Unique key columns
                         ['enrollment_id', 'subject_id', 'month', 'academic_year_id'],
-                        // Columns to update on conflict
                         ['score', 'grade', 'pass_fail', 'entered_by', 'updated_at']
                     );
                 }
@@ -156,9 +140,6 @@ class MonthlyReportService
         return ['saved' => $saved, 'skipped' => $skipped];
     }
 
-    // ----------------------------------------------------------------
-    // LOCK / UNLOCK — Admin only
-    // ----------------------------------------------------------------
     public function lockReport(
         int $classId,
         int $academicYearId,
@@ -189,9 +170,6 @@ class MonthlyReportService
             ->delete();
     }
 
-    // ----------------------------------------------------------------
-    // FILTER DATA
-    // ----------------------------------------------------------------
     public function getFilterData(): array
     {
         $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();

@@ -32,13 +32,14 @@
         <x-admin.nav-item route="admin.enrollments.index" icon="ti ti-clipboard-list" label="Enrollments" />
 
         <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Attendance</div>
-        <x-admin.nav-item route="admin.attendance-sessions.index" icon="ti ti-calendar-check" label="Attendance" />
+        <x-admin.nav-item route="admin.student-attendance.index" icon="ti ti-calendar-check" label="Student Attendance" />
 
         <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Scores</div>
-        <x-admin.nav-item route="admin.examination-scores.index" icon="ti ti-chart-bar" label="Examination Scores" />
+        <x-admin.nav-item route="admin.examination-scores.index" icon="ti ti-pencil" label="Examination Scores" />
 
         <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Reports</div>
-        <x-admin.nav-item route="admin.score-report.index" icon="ti ti-file-analytics" label="Score Reports" />
+        <x-admin.nav-item route="admin.reports.ranking.index" icon="ti ti-chart-bar"      label="Ranking Report" />
+        <x-admin.nav-item route="admin.reports.honors.index"  icon="ti ti-trophy"         label="Honors Report" />
 
     </nav>
 
@@ -48,3 +49,10 @@
         <p class="text-sm font-semibold text-gray-700">{{ auth()->user()->name }}</p>
     </div>
 </aside>
+
+{{-- Mobile overlay --}}
+<div
+    id="sidebar-overlay"
+    class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"
+    onclick="toggleSidebar()"
+></div>
