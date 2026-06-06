@@ -20,10 +20,10 @@
                    class="text-xs px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200">
                     Edit
                 </a>
-                <a href="{{ route('admin.score-report.index') }}"
-                   class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
-                    Score Report
-                </a>
+                <a href="{{ route('admin.reports.ranking.index') }}"
+   class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+    Reports
+</a>
             </div>
         </div>
 

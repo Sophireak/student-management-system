@@ -79,7 +79,7 @@
                 </div>
                 <i class="ti ti-chevron-right text-gray-300 group-hover:text-green-500 text-sm"></i>
             </a>
-            <a href="{{ route('admin.attendance-sessions.index') }}"
+            <a href="{{ route('admin.student-attendance.index') }}"
                class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors group">
                 <div class="flex items-center gap-3">
                     <i class="ti ti-calendar-check text-gray-400 group-hover:text-green-600 text-base"></i>
@@ -164,8 +164,7 @@
                 </div>
                 <i class="ti ti-chevron-right text-gray-300 group-hover:text-green-500 text-sm"></i>
             </a>
-
-            <a href="{{ route('admin.score-report.index') }}"
+ {{-- <a href="{{ route('admin.semester-report.index') }}"
                class="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50 transition-colors group">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-lg bg-green-50 group-hover:bg-green-100 flex items-center justify-center">
@@ -177,7 +176,8 @@
                     </div>
                 </div>
                 <i class="ti ti-chevron-right text-gray-300 group-hover:text-green-500 text-sm"></i>
-            </a>
+            </a> --}}
+           
 
         </div>
     </div>

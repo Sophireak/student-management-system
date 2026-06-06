@@ -25,23 +25,17 @@ class EnrollmentController extends Controller
             'schoolClass.grade',
             'schoolClass.academicYear',
         ])
-            ->when(
-                $search,
-                fn($q) =>
-                $q->whereHas(
-                    'student',
-                    fn($s) =>
-                    $s->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('student_id', 'like', "%{$search}%")
-                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
-                        ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
-                )
+        ->when($search, fn($q) =>
+            $q->whereHas('student', fn($s) =>
+                $s->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('student_id', 'like', "%{$search}%")
             )
-            ->when($status, fn($q) => $q->where('status', $status))
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
+        )
+        ->when($status, fn($q) => $q->where('status', $status))
+        ->latest()
+        ->paginate(20)
+        ->withQueryString();
 
         return view('admin.enrollments.index', compact('enrollments', 'search', 'status'));
     }
