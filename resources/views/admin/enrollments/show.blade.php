@@ -1,112 +1,136 @@
-@extends('layouts.admin', ['title' => 'Enrollment Detail'])
+@extends('layouts.admin', ['title' => 'Enrollment Details'])
 
 @section('content')
 
-<div class="max-w-2xl">
+<div class="mb-6">
     <a href="{{ route('admin.enrollments.index') }}"
-       class="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">
-        ← Back to Enrollments
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        <i class="ti ti-arrow-left text-base"></i> Back to Enrollments
     </a>
-
-    {{-- Summary --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-        <div class="flex items-start justify-between mb-4">
-            <div>
-                <h2 class="text-lg font-bold text-gray-800">
-                    {{ $enrollment->student->full_name }}
-                </h2>
-                <p class="text-sm text-gray-500 mt-0.5">
-                    {{ $enrollment->schoolClass->name }}
-                    · {{ $enrollment->schoolClass->grade->name }}
-                    · {{ $enrollment->schoolClass->academicYear->name }}
-                </p>
+    <div class="flex items-start justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-clipboard-list text-green-600 text-2xl"></i>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="px-2 py-1 text-xs font-semibold rounded-full
-                    {{ match($enrollment->status) {
-                        'active'      => 'bg-green-100 text-green-700',
-                        'transferred' => 'bg-yellow-100 text-yellow-700',
-                        'dropped'     => 'bg-red-100 text-red-700',
-                    } }}">
-                    {{ ucfirst($enrollment->status) }}
-                </span>
-                <a href="{{ route('admin.enrollments.edit', $enrollment) }}"
-                   class="text-xs px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200">
-                    Change Status
-                </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">{{ $enrollment->student->full_name }}</h1>
+                <p class="text-sm text-gray-400 mt-0.5">{{ $enrollment->schoolClass->name }} · {{ $enrollment->schoolClass->academicYear->name }}</p>
             </div>
         </div>
-
-        <p class="text-sm text-gray-500">
-            Enrolled on:
-            <span class="font-medium text-gray-700">
-                {{ $enrollment->enrolled_at->format('M d, Y') }}
-            </span>
-        </p>
+        <a href="{{ route('admin.enrollments.edit', $enrollment) }}"
+           class="flex items-center gap-2 px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-sm font-medium rounded-lg border border-yellow-200 transition-colors">
+            <i class="ti ti-pencil text-base"></i> Edit
+        </a>
     </div>
+</div>
 
-    {{-- Scores --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">Scores</h3>
+@if (session('success'))
+    <div class="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
+        <i class="ti ti-circle-check text-base"></i> {{ session('success') }}
+    </div>
+@endif
 
-        @forelse ($enrollment->scores as $score)
-            <div class="flex items-center justify-between py-2 border-b border-gray-100
-                        last:border-0 text-sm">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    {{-- Enrollment Info --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Enrollment Information</h2>
+
+        <div class="space-y-3">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-user text-gray-400 text-base"></i>
+                </div>
                 <div>
-                    <span class="font-medium text-gray-800">
-                        {{ $score->examSession->name }}
-                    </span>
-                    <span class="text-gray-400 mx-1">·</span>
-                    <span class="text-gray-500">
-                        {{ $score->examSession->subject->name }}
+                    <p class="text-xs text-gray-400">Student</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $enrollment->student->full_name }}</p>
+                    <p class="text-xs text-gray-400 font-mono">{{ $enrollment->student->student_id }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-building text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Class</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $enrollment->schoolClass->name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-award text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Grade</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $enrollment->schoolClass->grade->name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-calendar text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Academic Year</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $enrollment->schoolClass->academicYear->name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-calendar-check text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Enrolled On</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $enrollment->enrolled_at->format('M d, Y') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-toggle-right text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Status</p>
+                    @php
+                        $statusColor = match($enrollment->status) {
+                            'active'      => 'bg-green-100 text-green-700',
+                            'transferred' => 'bg-blue-100 text-blue-700',
+                            'dropped'     => 'bg-red-100 text-red-700',
+                            default       => 'bg-gray-100 text-gray-500',
+                        };
+                    @endphp
+                    <span class="mt-1 inline-block px-2.5 py-0.5 text-xs font-medium rounded-full {{ $statusColor }}">
+                        {{ ucfirst($enrollment->status) }}
                     </span>
                 </div>
-                <span class="font-bold text-gray-800">
-                    {{ $score->score }}
-                    <span class="text-xs text-gray-400 font-normal">
-                        / {{ $score->examSession->max_score }}
-                    </span>
-                </span>
             </div>
-        @empty
-            <p class="text-sm text-gray-400">No scores recorded yet.</p>
-        @endforelse
+        </div>
     </div>
 
-    {{-- Attendance summary --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">Attendance</h3>
-
-        @php
-            $total    = $enrollment->attendances->count();
-            $present  = $enrollment->attendances->where('status', 'present')->count();
-            $absent   = $enrollment->attendances->where('status', 'absent')->count();
-            $late     = $enrollment->attendances->where('status', 'late')->count();
-            $excused  = $enrollment->attendances->where('status', 'excused')->count();
-        @endphp
-
-        @if ($total > 0)
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-center">
-                <div class="p-3 bg-green-50 rounded-md">
-                    <p class="text-xl font-bold text-green-700">{{ $present }}</p>
-                    <p class="text-xs text-green-600">Present</p>
+    {{-- Quick Links --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Quick Links</h2>
+        <div class="space-y-2">
+            <a href="{{ route('admin.students.show', $enrollment->student) }}"
+               class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors group">
+                <div class="flex items-center gap-3">
+                    <i class="ti ti-user text-gray-400 group-hover:text-green-600 text-base"></i>
+                    View Student Profile
                 </div>
-                <div class="p-3 bg-red-50 rounded-md">
-                    <p class="text-xl font-bold text-red-700">{{ $absent }}</p>
-                    <p class="text-xs text-red-600">Absent</p>
+                <i class="ti ti-chevron-right text-gray-300 group-hover:text-green-500 text-sm"></i>
+            </a>
+            <a href="{{ route('admin.classes.show', $enrollment->schoolClass) }}"
+               class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors group">
+                <div class="flex items-center gap-3">
+                    <i class="ti ti-building text-gray-400 group-hover:text-green-600 text-base"></i>
+                    View Class Details
                 </div>
-                <div class="p-3 bg-yellow-50 rounded-md">
-                    <p class="text-xl font-bold text-yellow-700">{{ $late }}</p>
-                    <p class="text-xs text-yellow-600">Late</p>
-                </div>
-                <div class="p-3 bg-blue-50 rounded-md">
-                    <p class="text-xl font-bold text-blue-700">{{ $excused }}</p>
-                    <p class="text-xs text-blue-600">Excused</p>
-                </div>
-            </div>
-        @else
-            <p class="text-sm text-gray-400">No attendance records yet.</p>
-        @endif
+                <i class="ti ti-chevron-right text-gray-300 group-hover:text-green-500 text-sm"></i>
+            </a>
+        </div>
     </div>
 
 </div>
