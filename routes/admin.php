@@ -41,65 +41,67 @@ Route::middleware(['auth', 'verified', 'admin'])
         // ── Classes ───────────────────────────────────────────────
         Route::resource('classes', SchoolClassController::class);
         Route::prefix('classes/{class}/teachers')->name('classes.teachers.')->group(function () {
-            Route::get('/',                         [ClassTeacherController::class, 'index'])     ->name('index');
-            Route::get('/create',                   [ClassTeacherController::class, 'create'])    ->name('create');
-            Route::post('/',                        [ClassTeacherController::class, 'store'])     ->name('store');
+            Route::get('/',                         [ClassTeacherController::class, 'index'])->name('index');
+            Route::get('/create',                   [ClassTeacherController::class, 'create'])->name('create');
+            Route::post('/',                        [ClassTeacherController::class, 'store'])->name('store');
             Route::patch('/{classTeacher}/primary', [ClassTeacherController::class, 'setPrimary'])->name('setPrimary');
-            Route::delete('/{classTeacher}',        [ClassTeacherController::class, 'destroy'])   ->name('destroy');
+            Route::delete('/{classTeacher}',        [ClassTeacherController::class, 'destroy'])->name('destroy');
         });
 
         // ── Enrollments ───────────────────────────────────────────
         Route::resource('enrollments', EnrollmentController::class);
         Route::patch('enrollments/{enrollment}/status', [EnrollmentController::class, 'updateStatus'])
             ->name('enrollments.updateStatus');
+        Route::post('enrollments/{enrollment}/transfer', [EnrollmentController::class, 'transfer'])->name('enrollments.transfer');
+        Route::post('enrollments/{enrollment}/promote',  [EnrollmentController::class, 'promote'])->name('enrollments.promote');
 
         // ── Student Attendance ────────────────────────────────────
         Route::prefix('student-attendance')->name('student-attendance.')->group(function () {
-            Route::get('/',      [StudentAttendanceController::class, 'index']) ->name('index');
-            Route::get('/sheet', [StudentAttendanceController::class, 'sheet']) ->name('sheet');
-            Route::post('/save', [StudentAttendanceController::class, 'save'])  ->name('save');
+            Route::get('/',      [StudentAttendanceController::class, 'index'])->name('index');
+            Route::get('/sheet', [StudentAttendanceController::class, 'sheet'])->name('sheet');
+            Route::post('/save', [StudentAttendanceController::class, 'save'])->name('save');
         });
 
         // ── Examination Scores ────────────────────────────────────
         Route::prefix('examination-scores')->name('examination-scores.')->group(function () {
-            Route::get('/',               [ExaminationScoreController::class, 'index'])        ->name('index');
-            Route::get('/sheet',          [ExaminationScoreController::class, 'sheet'])        ->name('sheet');
-            Route::post('/save-monthly',  [ExaminationScoreController::class, 'saveMonthly'])  ->name('save-monthly');
-            Route::post('/save-semester', [ExaminationScoreController::class, 'saveSemester']) ->name('save-semester');
-            Route::post('/lock',          [ExaminationScoreController::class, 'lock'])         ->name('lock');
-            Route::post('/unlock',        [ExaminationScoreController::class, 'unlock'])       ->name('unlock');
+            Route::get('/',               [ExaminationScoreController::class, 'index'])->name('index');
+            Route::get('/sheet',          [ExaminationScoreController::class, 'sheet'])->name('sheet');
+            Route::post('/save-monthly',  [ExaminationScoreController::class, 'saveMonthly'])->name('save-monthly');
+            Route::post('/save-semester', [ExaminationScoreController::class, 'saveSemester'])->name('save-semester');
+            Route::post('/lock',          [ExaminationScoreController::class, 'lock'])->name('lock');
+            Route::post('/unlock',        [ExaminationScoreController::class, 'unlock'])->name('unlock');
         });
 
         // ── Score Entry (Monthly / Semester / Annual) ─────────────
         Route::prefix('monthly-report')->name('monthly-report.')->group(function () {
-            Route::get('/',        [MonthlyReportController::class, 'index'])  ->name('index');
-            Route::get('/sheet',   [MonthlyReportController::class, 'show'])   ->name('show');
-            Route::post('/save',   [MonthlyReportController::class, 'save'])   ->name('save');
-            Route::post('/lock',   [MonthlyReportController::class, 'lock'])   ->name('lock');
-            Route::post('/unlock', [MonthlyReportController::class, 'unlock']) ->name('unlock');
+            Route::get('/',        [MonthlyReportController::class, 'index'])->name('index');
+            Route::get('/sheet',   [MonthlyReportController::class, 'show'])->name('show');
+            Route::post('/save',   [MonthlyReportController::class, 'save'])->name('save');
+            Route::post('/lock',   [MonthlyReportController::class, 'lock'])->name('lock');
+            Route::post('/unlock', [MonthlyReportController::class, 'unlock'])->name('unlock');
         });
         Route::prefix('semester-report')->name('semester-report.')->group(function () {
-            Route::get('/',           [SemesterReportController::class, 'index'])     ->name('index');
-            Route::get('/sheet',      [SemesterReportController::class, 'show'])      ->name('show');
-            Route::post('/calculate', [SemesterReportController::class, 'calculate']) ->name('calculate');
-            Route::post('/save',      [SemesterReportController::class, 'save'])      ->name('save');
-            Route::post('/lock',      [SemesterReportController::class, 'lock'])      ->name('lock');
-            Route::post('/unlock',    [SemesterReportController::class, 'unlock'])    ->name('unlock');
+            Route::get('/',           [SemesterReportController::class, 'index'])->name('index');
+            Route::get('/sheet',      [SemesterReportController::class, 'show'])->name('show');
+            Route::post('/calculate', [SemesterReportController::class, 'calculate'])->name('calculate');
+            Route::post('/save',      [SemesterReportController::class, 'save'])->name('save');
+            Route::post('/lock',      [SemesterReportController::class, 'lock'])->name('lock');
+            Route::post('/unlock',    [SemesterReportController::class, 'unlock'])->name('unlock');
         });
         Route::prefix('annual-report')->name('annual-report.')->group(function () {
-            Route::get('/',           [AnnualReportController::class, 'index'])     ->name('index');
-            Route::get('/sheet',      [AnnualReportController::class, 'show'])      ->name('show');
-            Route::post('/calculate', [AnnualReportController::class, 'calculate']) ->name('calculate');
-            Route::post('/save',      [AnnualReportController::class, 'save'])      ->name('save');
-            Route::post('/lock',      [AnnualReportController::class, 'lock'])      ->name('lock');
-            Route::post('/unlock',    [AnnualReportController::class, 'unlock'])    ->name('unlock');
+            Route::get('/',           [AnnualReportController::class, 'index'])->name('index');
+            Route::get('/sheet',      [AnnualReportController::class, 'show'])->name('show');
+            Route::post('/calculate', [AnnualReportController::class, 'calculate'])->name('calculate');
+            Route::post('/save',      [AnnualReportController::class, 'save'])->name('save');
+            Route::post('/lock',      [AnnualReportController::class, 'lock'])->name('lock');
+            Route::post('/unlock',    [AnnualReportController::class, 'unlock'])->name('unlock');
         });
 
         // ── Reports ───────────────────────────────────────────────
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/ranking',       [ReportController::class, 'rankingIndex']) ->name('ranking.index');
-            Route::get('/ranking/sheet', [ReportController::class, 'rankingSheet']) ->name('ranking.sheet');
-            Route::get('/honors',        [ReportController::class, 'honorsIndex'])  ->name('honors.index');
-            Route::get('/honors/sheet',  [ReportController::class, 'honorsSheet'])  ->name('honors.sheet');
+            Route::get('/ranking',       [ReportController::class, 'rankingIndex'])->name('ranking.index');
+            Route::get('/ranking/sheet', [ReportController::class, 'rankingSheet'])->name('ranking.sheet');
+            Route::get('/honors',        [ReportController::class, 'honorsIndex'])->name('honors.index');
+            Route::get('/honors/sheet',  [ReportController::class, 'honorsSheet'])->name('honors.sheet');
         });
     });
