@@ -1,72 +1,100 @@
-@extends('layouts.admin', ['title' => 'Update Enrollment Status'])
+@extends('layouts.admin', ['title' => 'Edit Enrollment'])
 
 @section('content')
 
-<div class="max-w-md">
+<div class="mb-6">
     <a href="{{ route('admin.enrollments.index') }}"
-       class="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">
-        ← Back to Enrollments
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        <i class="ti ti-arrow-left text-base"></i> Back to Enrollments
     </a>
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+            <i class="ti ti-clipboard-list text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Edit Enrollment</h1>
+            <p class="text-sm text-gray-400 mt-0.5">{{ $enrollment->student->full_name }} — {{ $enrollment->schoolClass->name }}</p>
+        </div>
+    </div>
+</div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 class="text-base font-semibold text-gray-700 mb-1">Update Enrollment Status</h2>
+<div class="max-w-2xl">
+    <form method="POST" action="{{ route('admin.enrollments.update', $enrollment) }}">
+        @csrf
+        @method('PUT')
 
-        {{-- Read-only summary --}}
-        <div class="mb-5 p-3 bg-gray-50 rounded-md text-sm text-gray-600 space-y-1">
-            <p>
-                <span class="font-medium">Student:</span>
-                {{ $enrollment->student->full_name }}
-            </p>
-            <p>
-                <span class="font-medium">Class:</span>
-                {{ $enrollment->schoolClass->name }}
-                — {{ $enrollment->schoolClass->grade->name }}
-            </p>
-            <p>
-                <span class="font-medium">Year:</span>
-                {{ $enrollment->schoolClass->academicYear->name }}
-            </p>
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Enrollment Details</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                {{-- Student (readonly) --}}
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+                    <div class="relative">
+                        <i class="ti ti-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="text" value="{{ $enrollment->student->full_name }} ({{ $enrollment->student->student_id }})"
+                               readonly class="w-full border border-gray-200 bg-gray-50 rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-500 cursor-not-allowed">
+                    </div>
+                </div>
+
+                {{-- Class --}}
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <select name="school_class_id" required
+                                class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 {{ $errors->has('school_class_id') ? 'border-red-400 bg-red-50' : 'border-gray-300' }}">
+                            @foreach ($classes as $class)
+                                <option value="{{ $class->id }}" {{ old('school_class_id', $enrollment->school_class_id) == $class->id ? 'selected' : '' }}>
+                                    {{ $class->name }} — {{ $class->grade->name }} · {{ $class->academicYear->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('school_class_id')<p class="mt-1 text-xs text-red-500 flex items-center gap-1"><i class="ti ti-alert-circle"></i> {{ $message }}</p>@enderror
+                </div>
+
+                {{-- Enrolled At --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Enrollment Date</label>
+                    <div class="relative">
+                        <i class="ti ti-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="date" name="enrolled_at"
+                               value="{{ old('enrolled_at', $enrollment->enrolled_at->format('Y-m-d')) }}"
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                    </div>
+                </div>
+
+                {{-- Status --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <div class="relative">
+                        <i class="ti ti-toggle-right absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <select name="status"
+                                class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                            <option value="active"      {{ old('status', $enrollment->status) === 'active'      ? 'selected' : '' }}>Active</option>
+                            <option value="transferred" {{ old('status', $enrollment->status) === 'transferred' ? 'selected' : '' }}>Transferred</option>
+                            <option value="dropped"     {{ old('status', $enrollment->status) === 'dropped'     ? 'selected' : '' }}>Dropped</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <form method="POST"
-              action="{{ route('admin.enrollments.update', $enrollment) }}"
-              novalidate>
-            @csrf
-            @method('PUT')
-
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Status <span class="text-red-500">*</span>
-                </label>
-                <select name="status"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500
-                               @error('status') border-red-400 @enderror">
-                    <option value="active"
-                        {{ old('status', $enrollment->status) === 'active' ? 'selected' : '' }}>
-                        Active
-                    </option>
-                    <option value="transferred"
-                        {{ old('status', $enrollment->status) === 'transferred' ? 'selected' : '' }}>
-                        Transferred
-                    </option>
-                    <option value="dropped"
-                        {{ old('status', $enrollment->status) === 'dropped' ? 'selected' : '' }}>
-                        Dropped
-                    </option>
-                </select>
-                @error('status')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
+        <div class="flex items-center gap-3">
             <button type="submit"
-                    class="w-full py-2 px-4 bg-blue-600 text-white text-sm font-medium
-                           rounded-md hover:bg-blue-700">
-                Update Status
+                    class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                <i class="ti ti-device-floppy text-base"></i> Update Enrollment
             </button>
-        </form>
-    </div>
+            <a href="{{ route('admin.enrollments.index') }}"
+               class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-lg transition-colors">
+                Cancel
+            </a>
+        </div>
+
+    </form>
 </div>
 
 @endsection
