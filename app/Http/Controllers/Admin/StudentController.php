@@ -18,21 +18,67 @@ class StudentController extends Controller
     {
         $search = $request->input('search');
 
-        $students = Student::when(
-            $search,
-            fn($q) =>
-            $q->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('student_id', 'like', "%{$search}%")
-                ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
-                ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
-        )
+        $students = Student::when($search, fn($q) =>
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('student_id', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
+            )
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.students.index', compact('students', 'search'));
+        $archivedCount = Student::onlyTrashed()->count();
+
+        return view('admin.students.index', compact('students', 'search', 'archivedCount'));
+    }
+
+    public function archived(Request $request): View
+    {
+        $search = $request->input('search');
+
+        $students = Student::onlyTrashed()
+            ->when($search, fn($q) =>
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('student_id', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                  ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
+            )
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.students.archived', compact('students', 'search'));
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        $student = Student::onlyTrashed()->findOrFail($id);
+        $student->restore();
+
+        return redirect()
+            ->route('admin.students.archived')
+            ->with('success', "{$student->full_name} has been restored successfully.");
+    }
+
+    public function forceDelete(int $id): RedirectResponse
+    {
+        $student = Student::onlyTrashed()->findOrFail($id);
+
+        if ($student->enrollments()->withTrashed()->exists()) {
+            return redirect()
+                ->route('admin.students.archived')
+                ->with('error', 'Cannot permanently delete a student with enrollment records.');
+        }
+
+        $student->forceDelete();
+
+        return redirect()
+            ->route('admin.students.archived')
+            ->with('success', 'Student permanently deleted.');
     }
 
     public function create(): View
@@ -110,13 +156,13 @@ class StudentController extends Controller
         if ($student->enrollments()->where('status', 'active')->exists()) {
             return redirect()
                 ->route('admin.students.index')
-                ->with('error', 'Cannot delete a student with active enrollments.');
+                ->with('error', 'Cannot archive a student with active enrollments.');
         }
 
         $student->delete();
 
         return redirect()
             ->route('admin.students.index')
-            ->with('success', 'Student archived successfully.');
+            ->with('success', "{$student->full_name} has been archived.");
     }
 }

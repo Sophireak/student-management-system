@@ -2,101 +2,132 @@
 
 @section('content')
 
-<div class="max-w-3xl">
+<div class="mb-6">
     <a href="{{ route('admin.attendance-sessions.index') }}"
-       class="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">
-        ← Back to Sessions
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        <i class="ti ti-arrow-left text-base"></i> Back to Sessions
     </a>
-
-    {{-- Session header --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-        <div class="flex items-start justify-between">
+    <div class="flex items-start justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-calendar-check text-green-600 text-2xl"></i>
+            </div>
             <div>
-                <h2 class="text-lg font-bold text-gray-800">
-                    {{ $attendanceSession->schoolClass->name }}
-                    — {{ $attendanceSession->subject->name }}
-                </h2>
-                <p class="text-sm text-gray-500 mt-0.5">
-                    {{ $attendanceSession->session_date->format('l, M d, Y') }}
-                    @if ($attendanceSession->period)
-                        · {{ ucfirst($attendanceSession->period) }}
+                <h1 class="text-2xl font-bold text-gray-800">{{ $session->session_date->format('M d, Y') }}</h1>
+                <p class="text-sm text-gray-400 mt-0.5">
+                    {{ $session->schoolClass->name }} · {{ $session->subject->name }}
+                    @if ($session->period)
+                        · <span class="capitalize">{{ $session->period }}</span>
                     @endif
-                    · {{ $attendanceSession->schoolClass->grade->name }}
-                    · {{ $attendanceSession->schoolClass->academicYear->name }}
                 </p>
-                @if ($attendanceSession->topic)
-                    <p class="text-sm text-gray-400 mt-1">
-                        Topic: {{ $attendanceSession->topic }}
-                    </p>
-                @endif
             </div>
         </div>
-
-        {{-- Summary counts --}}
-        @php
-            $att      = $attendanceSession->attendances;
-            $present  = $att->where('status', 'present')->count();
-            $absent   = $att->where('status', 'absent')->count();
-            $late     = $att->where('status', 'late')->count();
-            $excused  = $att->where('status', 'excused')->count();
-            $total    = $att->count();
-        @endphp
-
-        @if ($total > 0)
-            <div class="grid grid-cols-4 gap-3 mt-4 text-center text-sm">
-                <div class="bg-green-50 rounded-md p-3">
-                    <p class="text-xl font-bold text-green-700">{{ $present }}</p>
-                    <p class="text-xs text-green-600">Present</p>
-                </div>
-                <div class="bg-red-50 rounded-md p-3">
-                    <p class="text-xl font-bold text-red-700">{{ $absent }}</p>
-                    <p class="text-xs text-red-600">Absent</p>
-                </div>
-                <div class="bg-yellow-50 rounded-md p-3">
-                    <p class="text-xl font-bold text-yellow-700">{{ $late }}</p>
-                    <p class="text-xs text-yellow-600">Late</p>
-                </div>
-                <div class="bg-blue-50 rounded-md p-3">
-                    <p class="text-xl font-bold text-blue-700">{{ $excused }}</p>
-                    <p class="text-xs text-blue-600">Excused</p>
-                </div>
-            </div>
-        @endif
     </div>
+</div>
 
-    {{-- Attendance records --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
-            <h3 class="text-sm font-semibold text-gray-700">Student Attendance</h3>
-        </div>
+@if (session('success'))
+    <div class="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
+        <i class="ti ti-circle-check text-base"></i> {{ session('success') }}
+    </div>
+@endif
 
-        @forelse ($attendanceSession->attendances as $record)
-            <div class="flex items-center justify-between px-5 py-3
-                        border-b border-gray-100 last:border-0 text-sm">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    {{-- Session Info --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Session Info</h2>
+
+        <div class="space-y-3">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-calendar text-gray-400 text-base"></i>
+                </div>
                 <div>
-                    <p class="font-medium text-gray-800">
-                        {{ $record->enrollment->student->full_name }}
-                    </p>
-                    @if ($record->notes)
-                        <p class="text-xs text-gray-400 mt-0.5">{{ $record->notes }}</p>
-                    @endif
+                    <p class="text-xs text-gray-400">Date</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $session->session_date->format('M d, Y') }}</p>
                 </div>
-                <span class="px-2 py-1 text-xs font-semibold rounded-full
-                    {{ match($record->status) {
-                        'present' => 'bg-green-100 text-green-700',
-                        'absent'  => 'bg-red-100 text-red-700',
-                        'late'    => 'bg-yellow-100 text-yellow-700',
-                        'excused' => 'bg-blue-100 text-blue-700',
-                    } }}">
-                    {{ ucfirst($record->status) }}
-                </span>
             </div>
-        @empty
-            <div class="px-5 py-6 text-center text-gray-400 text-sm">
-                No attendance marked yet.
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-building text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Class</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $session->schoolClass->name }}</p>
+                    <p class="text-xs text-gray-400">{{ $session->schoolClass->grade->name }}</p>
+                </div>
             </div>
-        @endforelse
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-book text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Subject</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $session->subject->name }}</p>
+                </div>
+            </div>
+            @if ($session->period)
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-clock text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Period</p>
+                    <p class="text-sm font-medium text-gray-700 capitalize">{{ $session->period }}</p>
+                </div>
+            </div>
+            @endif
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-users text-gray-400 text-base"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Total Marked</p>
+                    <p class="text-sm font-medium text-gray-700">{{ $session->attendances->count() }} students</p>
+                </div>
+            </div>
+        </div>
     </div>
+
+    {{-- Attendance List --}}
+    <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Attendance Records</h2>
+
+        <form method="POST" action="{{ route('admin.attendance-sessions.attendance.index', $session) }}">
+            @csrf
+
+            @if ($session->attendances->count() > 0)
+                <div class="space-y-1 mb-4">
+                    @foreach ($session->attendances()->with('student')->get() as $attendance)
+                        <div class="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="ti ti-user text-green-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">{{ $attendance->student->full_name }}</p>
+                                    <p class="text-xs text-gray-400 font-mono">{{ $attendance->student->student_id }}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full
+                                {{ $attendance->status === 'present' ? 'bg-green-100 text-green-700' :
+                                   ($attendance->status === 'absent'  ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700') }}">
+                                {{ ucfirst($attendance->status) }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="py-10 text-center">
+                    <i class="ti ti-clipboard-off text-4xl text-gray-300 block mb-2"></i>
+                    <p class="text-sm text-gray-400">No attendance records yet.</p>
+                </div>
+            @endif
+
+        </form>
+    </div>
+
 </div>
 
 @endsection

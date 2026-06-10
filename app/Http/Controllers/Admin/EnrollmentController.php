@@ -25,17 +25,21 @@ class EnrollmentController extends Controller
             'schoolClass.grade',
             'schoolClass.academicYear',
         ])
-        ->when($search, fn($q) =>
-            $q->whereHas('student', fn($s) =>
-                $s->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('student_id', 'like', "%{$search}%")
+            ->when(
+                $search,
+                fn($q) =>
+                $q->whereHas(
+                    'student',
+                    fn($s) =>
+                    $s->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('student_id', 'like', "%{$search}%")
+                )
             )
-        )
-        ->when($status, fn($q) => $q->where('status', $status))
-        ->latest()
-        ->paginate(20)
-        ->withQueryString();
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.enrollments.index', compact('enrollments', 'search', 'status'));
     }
@@ -84,7 +88,12 @@ class EnrollmentController extends Controller
     {
         $enrollment->load(['student', 'schoolClass.grade', 'schoolClass.academicYear']);
 
-        return view('admin.enrollments.edit', compact('enrollment'));
+        $classes = SchoolClass::with(['grade', 'academicYear'])
+            ->orderBy('grade_id')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.enrollments.edit', compact('enrollment', 'classes'));
     }
 
     public function update(UpdateEnrollmentRequest $request, Enrollment $enrollment): RedirectResponse
