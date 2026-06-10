@@ -25,22 +25,15 @@ class Enrollment extends Model
         ];
     }
 
-    // Enrollment belongs to a student
+    // Use withTrashed() so soft-deleted students still appear on enrollments
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class)->withTrashed();
     }
 
-    // Enrollment belongs to a class
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
-    }
-
-    // Enrollment has many scores
-    public function scores(): HasMany
-    {
-        return $this->hasMany(Score::class);
     }
 
     // Enrollment has many attendance records

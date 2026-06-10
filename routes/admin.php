@@ -36,6 +36,10 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // ── People ────────────────────────────────────────────────
         Route::resource('teachers', TeacherController::class);
+
+        Route::get('students/archived',          [StudentController::class, 'archived'])->name('students.archived');
+        Route::post('students/{id}/restore',     [StudentController::class, 'restore'])->name('students.restore');
+        Route::delete('students/{id}/force-delete', [StudentController::class, 'forceDelete'])->name('students.force-delete');
         Route::resource('students', StudentController::class);
 
         // ── Classes ───────────────────────────────────────────────
