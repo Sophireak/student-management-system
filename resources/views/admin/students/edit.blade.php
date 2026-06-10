@@ -13,7 +13,8 @@
             <i class="ti ti-user text-green-600 text-xl"></i>
         </div>
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Edit Student</h1>
+            <h1 class="text-2xl font-bold text-gray-800">Student Informaion Editor
+            </h1>
             <p class="text-sm text-gray-400 font-mono mt-0.5">{{ $student->student_id }}</p>
         </div>
     </div>

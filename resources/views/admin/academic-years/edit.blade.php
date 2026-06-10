@@ -1,86 +1,85 @@
-@extends('layouts.admin', ['title' => 'Edit Academic Year'])
+ @extends('layouts.admin', ['title' => 'Edit Academic Year'])
 
 @section('content')
 
-<div class="max-w-lg">
+<div class="mb-6">
     <a href="{{ route('admin.academic-years.index') }}"
-       class="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">
-        ← Back to Academic Years
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        <i class="ti ti-arrow-left text-base"></i> Back to Academic Years
     </a>
-
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 class="text-base font-semibold text-gray-700 mb-4">Edit Academic Year</h2>
-
-        <form method="POST"
-              action="{{ route('admin.academic-years.update', $academicYear) }}"
-              novalidate>
-            @csrf
-            @method('PUT')
-
-            {{-- Name --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Year Name <span class="text-red-500">*</span>
-                </label>
-                <input type="text"
-                       name="name"
-                       value="{{ old('name', $academicYear->name) }}"
-                       placeholder="e.g. 2024-2025"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500
-                              @error('name') border-red-400 @enderror">
-                @error('name')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Start date --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date <span class="text-red-500">*</span>
-                </label>
-                <input type="date"
-                       name="start_date"
-                       value="{{ old('start_date', $academicYear->start_date->format('Y-m-d')) }}"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500
-                              @error('start_date') border-red-400 @enderror">
-                @error('start_date')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- End date --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    End Date <span class="text-red-500">*</span>
-                </label>
-                <input type="date"
-                       name="end_date"
-                       value="{{ old('end_date', $academicYear->end_date->format('Y-m-d')) }}"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500
-                              @error('end_date') border-red-400 @enderror">
-                @error('end_date')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Active status notice --}}
-            @if ($academicYear->is_active)
-                <div class="mb-6 px-3 py-2 bg-green-50 border border-green-200 text-green-700 text-sm rounded-md">
-                    ✅ This is the currently active academic year.
-                    Use the <strong>Set Active</strong> button on the list to change it.
-                </div>
-            @endif
-
-            <button type="submit"
-                    class="w-full py-2 px-4 bg-blue-600 text-white text-sm font-medium
-                           rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Update Academic Year
-            </button>
-        </form>
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+            <i class="ti ti-calendar text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Edit Academic Year</h1>
+            <p class="text-sm text-gray-400 mt-0.5">{{ $academicYear->name }}</p>
+        </div>
     </div>
+</div>
+
+<div class="max-w-2xl">
+    <form method="POST" action="{{ route('admin.academic-years.update', $academicYear) }}">
+        @csrf
+        @method('PUT')
+
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Year Details</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Year Name <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <i class="ti ti-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="text" name="name" value="{{ old('name', $academicYear->name) }}" required
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 {{ $errors->has('name') ? 'border-red-400 bg-red-50' : 'border-gray-300' }}">
+                    </div>
+                    @error('name')<p class="mt-1 text-xs text-red-500 flex items-center gap-1"><i class="ti ti-alert-circle"></i> {{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <div class="relative">
+                        <i class="ti ti-calendar-event absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="date" name="start_date" value="{{ old('start_date', $academicYear->start_date?->format('Y-m-d')) }}"
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <div class="relative">
+                        <i class="ti ti-calendar-event absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="date" name="end_date" value="{{ old('end_date', $academicYear->end_date?->format('Y-m-d')) }}"
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                    </div>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="is_active" value="1"
+                               {{ old('is_active', $academicYear->is_active) ? 'checked' : '' }}
+                               class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="text-sm font-medium text-gray-700">Set as active academic year</span>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                <i class="ti ti-device-floppy text-base"></i> Update Year
+            </button>
+            <a href="{{ route('admin.academic-years.index') }}"
+               class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-lg transition-colors">
+                Cancel
+            </a>
+        </div>
+
+    </form>
 </div>
 
 @endsection

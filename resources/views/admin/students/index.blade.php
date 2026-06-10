@@ -8,10 +8,9 @@
         <h1 class="text-2xl font-bold text-gray-800">Students</h1>
         <p class="text-sm text-gray-500 mt-1">Manage all enrolled students</p>
     </div>
-    @if (($archivedCount ?? 0) > 0)
-    <a href="{{ route('admin.students.archived') }}"
-       class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-lg transition-colors">
-        <i class="ti ti-archive text-base"></i> Archived ({{ $archivedCount }})
+    <a href="{{ route('admin.students.create') }}"
+       class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+        <i class="ti ti-user-plus text-base"></i> New Student
     </a>
 @endif
     <a href="{{ route('admin.students.create') }}"
