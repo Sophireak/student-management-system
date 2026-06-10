@@ -2,85 +2,104 @@
 
 @section('content')
 
-<div class="max-w-md">
+<div class="mb-6">
     <a href="{{ route('admin.subjects.index') }}"
-       class="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">
-        ← Back to Subjects
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        <i class="ti ti-arrow-left text-base"></i> Back to Subjects
     </a>
-
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 class="text-base font-semibold text-gray-700 mb-4">Edit Subject</h2>
-
-        <form method="POST"
-              action="{{ route('admin.subjects.update', $subject) }}"
-              novalidate>
-            @csrf
-            @method('PUT')
-
-            {{-- Grade --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Grade <span class="text-red-500">*</span>
-                </label>
-                <select name="grade_id"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500
-                               @error('grade_id') border-red-400 @enderror">
-                    <option value="">— Select Grade —</option>
-                    @foreach ($grades as $grade)
-                        <option value="{{ $grade->id }}"
-                            {{ old('grade_id', $subject->grade_id) == $grade->id ? 'selected' : '' }}>
-                            {{ $grade->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('grade_id')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Name --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Subject Name <span class="text-red-500">*</span>
-                </label>
-                <input type="text"
-                       name="name"
-                       value="{{ old('name', $subject->name) }}"
-                       placeholder="e.g. Mathematics"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500
-                              @error('name') border-red-400 @enderror">
-                @error('name')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Code --}}
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Subject Code
-                    <span class="text-gray-400 text-xs font-normal">(optional)</span>
-                </label>
-                <input type="text"
-                       name="code"
-                       value="{{ old('code', $subject->code) }}"
-                       placeholder="e.g. MATH-G1"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500
-                              @error('code') border-red-400 @enderror">
-                @error('code')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <button type="submit"
-                    class="w-full py-2 px-4 bg-blue-600 text-white text-sm font-medium
-                           rounded-md hover:bg-blue-700">
-                Update Subject
-            </button>
-        </form>
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+            <i class="ti ti-book text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Edit Subject</h1>
+            <p class="text-sm text-gray-400 mt-0.5">{{ $subject->name }}</p>
+        </div>
     </div>
+</div>
+
+<div class="max-w-2xl">
+    <form method="POST" action="{{ route('admin.subjects.update', $subject) }}">
+        @csrf
+        @method('PUT')
+
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Subject Details</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Subject Name <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <i class="ti ti-book absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="text" name="name" value="{{ old('name', $subject->name) }}" required
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 {{ $errors->has('name') ? 'border-red-400 bg-red-50' : 'border-gray-300' }}">
+                    </div>
+                    @error('name')<p class="mt-1 text-xs text-red-500 flex items-center gap-1"><i class="ti ti-alert-circle"></i> {{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Subject Code</label>
+                    <div class="relative">
+                        <i class="ti ti-hash absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="text" name="code" value="{{ old('code', $subject->code) }}"
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Grade <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <i class="ti ti-award absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <select name="grade_id" required
+                                class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 {{ $errors->has('grade_id') ? 'border-red-400 bg-red-50' : 'border-gray-300' }}">
+                            <option value="">— Select Grade —</option>
+                            @foreach ($grades as $grade)
+                                <option value="{{ $grade->id }}" {{ old('grade_id', $subject->grade_id) == $grade->id ? 'selected' : '' }}>
+                                    {{ $grade->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('grade_id')<p class="mt-1 text-xs text-red-500 flex items-center gap-1"><i class="ti ti-alert-circle"></i> {{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Score Type</label>
+                    <div class="relative">
+                        <i class="ti ti-chart-bar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <select name="score_type"
+                                class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                            <option value="numeric" {{ old('score_type', $subject->score_type) === 'numeric' ? 'selected' : '' }}>Numeric</option>
+                            <option value="grade"   {{ old('score_type', $subject->score_type) === 'grade'   ? 'selected' : '' }}>Grade</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Max Score</label>
+                    <div class="relative">
+                        <i class="ti ti-number absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                        <input type="number" name="max_score" value="{{ old('max_score', $subject->max_score) }}" min="1"
+                               class="w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 border-gray-300">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                <i class="ti ti-device-floppy text-base"></i> Update Subject
+            </button>
+            <a href="{{ route('admin.subjects.index') }}"
+               class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-lg transition-colors">
+                Cancel
+            </a>
+        </div>
+
+    </form>
 </div>
 
 @endsection
