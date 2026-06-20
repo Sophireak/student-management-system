@@ -20,7 +20,7 @@
           action="{{ route($routePrefix . '.reports.ranking.sheet') }}"
           id="filter-form">
 
-            {{-- Class --}}
+            <!-- {{-- Class --}}
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -36,10 +36,13 @@
                         @endforeach
                     </select>
                 </div>
-            </div>
+            </div> -->
 
+
+
+@if ($isAdmin)
             {{-- Academic Year --}}
-            <!-- <div class="mb-4">
+            <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <i class="ti ti-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
@@ -52,8 +55,8 @@
                         @endforeach
                     </select>
                 </div>
-            </div> -->
-
+            </div>
+@endif
             {{-- Period --}}
             <!-- <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Period <span class="text-red-500">*</span></label>
