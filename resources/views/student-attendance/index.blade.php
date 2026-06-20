@@ -12,7 +12,7 @@
     <div class="bg-white rounded-xl border border-gray-200 p-6">
         <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Select Filter</h2>
 
-        <form method="GET" action="{{ route('admin.student-attendance.sheet') }}" id="filter-form">
+        <form method="GET" action="{{ route($routePrefix . '.student-attendance.sheet') }}"id="filter-form">
 
             {{-- Class --}}
             <div class="mb-4">
