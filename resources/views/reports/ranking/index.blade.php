@@ -12,7 +12,7 @@
 
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-800">Ranking Report</h1>
-    <p class="text-sm text-gray-500 mt-1">View student rankings by class and period.</p>
+    <p class="text-sm text-gray-500 mt-1">Select class and period to generate a ranked student report.</p>
 </div>
 
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-xl">
@@ -29,9 +29,11 @@
                             class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm
                                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                         <option value="">— Select Year —</option>
-                        @foreach ($academicYears as $year)
-                            <option value="{{ $year->id }}">{{ $year->name }}</option>
-                        @endforeach
+                       @foreach ($academicYears as $year)
+                        <option value="{{ $year->id }}" {{ $year->is_active ? 'selected' : '' }}>
+                            {{ $year->name }} @if($year->is_active)(Active)@endif
+                        </option>
+                    @endforeach
                     </select>
                 </div>
             </div>
