@@ -2,6 +2,11 @@
 
 @section('content')
 
+@php
+    $routePrefix = auth()->user()->isAdmin() ? 'admin' : 'teacher';
+    $isAdmin     = auth()->user()->isAdmin();
+@endphp
+
 {{-- Page Header --}}
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-800">Honors Report</h1>
@@ -12,7 +17,7 @@
     <div class="bg-white rounded-xl border border-gray-200 p-6">
         <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Select Filter</h2>
 
-        <form method="GET" action="{{ route('admin.reports.honors.sheet') }}">
+        <form method="GET" action="{{ route($routePrefix . '.reports.honors.sheet') }}">
 
             {{-- Class --}}
             <div class="mb-4">
@@ -31,7 +36,7 @@
                     </select>
                 </div>
             </div>
-
+@if ($isAdmin)
             {{-- Academic Year --}}
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year <span class="text-red-500">*</span></label>
@@ -47,7 +52,7 @@
                     </select>
                 </div>
             </div>
-
+@endif
             {{-- Period --}}
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Period <span class="text-red-500">*</span></label>
