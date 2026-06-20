@@ -46,8 +46,8 @@
                             class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm
                                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                         <option value="">— Select Month —</option>
-                        @foreach ([1=>'September',2=>'October',3=>'November',4=>'December',5=>'January',6=>'February',7=>'March',8=>'April',9=>'May'] as $num => $name)
-                            <option value="{{ $num }}">Month {{ $num }} — {{ $name }}</option>
+                        @foreach ([1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'] as $n => $name)
+                            <option value="{{ $n }}" {{ $n == now()->month ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -62,20 +62,36 @@
                             class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm
                                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                         <option value="">— Select Year —</option>
-                        @foreach (range(date('Y'), date('Y') - 3) as $y)
-                            <option value="{{ $y }}">{{ $y }}</option>
-                        @endforeach
+                         @for ($y = now()->year; $y >= now()->year - 2; $y--)
+                            <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
                     </select>
                 </div>
             </div>
 
-            <button type="submit"
-                    class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
-                <i class="ti ti-eye text-base"></i> View Attendance Sheet
-            </button>
+            
 
         </form>
     </div>
 </div>
+
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form     = document.getElementById('filter-form');
+    const selClass = document.getElementById('sel-class');
+    const selMonth = document.getElementById('sel-month');
+    const selYear  = document.getElementById('sel-year');
+    function trySubmit() {
+        if (selClass.value && selMonth.value && selYear.value) form.submit();
+    }
+    selClass.addEventListener('change', trySubmit);
+    selMonth.addEventListener('change', trySubmit);
+    selYear.addEventListener('change', trySubmit);
+});
+</script>
+@endpush
 
 @endsection
