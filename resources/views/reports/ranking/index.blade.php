@@ -19,27 +19,6 @@
     <form method="GET"
           action="{{ route($routePrefix . '.reports.ranking.sheet') }}"
           id="filter-form">
-
-            <!-- {{-- Class --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
-                <div class="relative">
-                    <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
-                    <select name="class_id" required
-                            class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                        <option value="">— Select Class —</option>
-                        @foreach ($classes as $cls)
-                            <option value="{{ $cls->id }}">
-                                {{ $cls->name }} ({{ $cls->grade->name }}) · {{ $cls->academicYear->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div> -->
-
-
-
 @if ($isAdmin)
             {{-- Academic Year --}}
             <div class="mb-4">
@@ -57,27 +36,6 @@
                 </div>
             </div>
 @endif
-            {{-- Period --}}
-            <!-- <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Period <span class="text-red-500">*</span></label>
-                <div class="relative">
-                    <i class="ti ti-clock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
-                    <select name="period" required
-                            class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                        <option value="">— Select Period —</option>
-                        <optgroup label="Monthly">
-                            @foreach ([1=>'September',2=>'October',3=>'November',4=>'December',5=>'January',6=>'February',7=>'March',8=>'April',9=>'May'] as $num => $name)
-                                <option value="month_{{ $num }}">Month {{ $num }} — {{ $name }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Semester">
-                            <option value="semester_1">Semester 1 (Sep — Jan)</option>
-                            <option value="semester_2">Semester 2 (Feb — May)</option>
-                        </optgroup>
-                    </select>
-                </div>
-            </div> -->
               <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
             <select name="class_id" id="sel-class" required
