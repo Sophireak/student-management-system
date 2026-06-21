@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ClassTeacherSeeder::class,
             StudentEnrollmentSeeder::class,
             ScoreSeeder::class,
+            SubjectSeeder::class,
         ]);
     }
 }
