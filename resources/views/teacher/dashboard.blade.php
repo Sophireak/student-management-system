@@ -104,42 +104,4 @@
         </div>
     @endif
 </div>
-
-{{-- Recent Attendance Sessions --}}
-<div>
-    <h2 class="text-sm font-semibold text-gray-700 mb-3">Recent Attendance Sessions</h2>
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        @if ($recentSessions->isNotEmpty())
-            <table class="min-w-full divide-y divide-gray-100 text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Class</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @foreach ($recentSessions as $session)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-5 py-3 text-gray-700">{{ $session->session_date->format('M d, Y') }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $session->schoolClass->name }}</td>
-                            <td class="px-5 py-3 text-gray-500">{{ $session->subject->name }}</td>
-                            <td class="px-5 py-3">
-                                <a href="{{ route('teacher.attendance-sessions.show', $session) }}"
-                                   class="text-blue-600 hover:underline text-xs font-medium">View</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <div class="px-5 py-10 text-center">
-                <i class="ti ti-calendar-off text-3xl text-gray-300 block mb-2"></i>
-                <p class="text-gray-400 text-sm">No attendance sessions recorded yet.</p>
-            </div>
-        @endif
-    </div>
-</div>
-
 @endsection
