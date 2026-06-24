@@ -9,38 +9,81 @@
     $selectedPeriod = $selectedPeriod ?? 'month_' . $month;
 @endphp
 
-<div class="mb-4 flex items-center justify-between">
-    <div>
-        <a href="{{ route($routePrefix . '.examination-scores.index') }}"
-           class="text-sm text-blue-600 hover:underline">← Examination Scores</a>
-        <h2 class="text-lg font-semibold text-gray-700 mt-1">
-            {{ $class->name }} · {{ $class->grade->name }}
-        </h2>
-        <p class="text-sm text-gray-400 mt-0.5">
-            Month {{ $month }} — {{ $monthName }} · {{ $academicYear->name }}
-        </p>
+{{-- Header --}}
+<div class="mb-6">
+    <a href="{{ route($routePrefix . '.examination-scores.index') }}"
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        <i class="ti ti-arrow-left text-base"></i> Back to Examination Scores
+    </a>
+    <div class="flex items-start justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-clipboard-list text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">{{ $class->name }} · {{ $class->grade->name }}</h1>
+                <p class="text-sm text-gray-400 mt-0.5">Month {{ $month }} — {{ $monthName }} · {{ $academicYear->name }}</p>
+            </div>
+        </div>
+
+        {{-- Lock / Unlock --}}
+        @if ($isAdmin)
+            @if ($isLocked)
+                <form method="POST" action="{{ route('admin.examination-scores.unlock') }}">
+                    @csrf
+                    <input type="hidden" name="class_id"         value="{{ $class->id }}">
+                    <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
+                    <input type="hidden" name="period_type"      value="month">
+                    <input type="hidden" name="month"            value="{{ $month }}">
+                    <button type="submit"
+                            class="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
+                        <i class="ti ti-lock text-base"></i> Locked — Click to Unlock
+                    </button>
+                </form>
+            @else
+                <form method="POST" action="{{ route('admin.examination-scores.lock') }}">
+                    @csrf
+                    <input type="hidden" name="class_id"         value="{{ $class->id }}">
+                    <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
+                    <input type="hidden" name="period_type"      value="month">
+                    <input type="hidden" name="month"            value="{{ $month }}">
+                    <button type="submit"
+                            class="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 text-gray-500 text-sm font-medium rounded-lg hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-700 transition-colors">
+                        <i class="ti ti-lock-open text-base"></i> Unlocked — Click to Lock
+                    </button>
+                </form>
+            @endif
+        @else
+            @if ($isLocked)
+                <span class="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-lg">
+                    <i class="ti ti-lock text-base"></i> Locked by Admin
+                </span>
+            @endif
+        @endif
     </div>
 </div>
 
+{{-- Alert --}}
 @if (session('success'))
-    <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-        ✅ {{ session('success') }}
+    <div class="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
+        <i class="ti ti-circle-check text-base"></i> {{ session('success') }}
     </div>
 @endif
 
-<div class="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
-    <div class="flex flex-wrap items-end gap-3">
+{{-- Filter Bar --}}
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-5">
+    <form method="GET"
+          action="{{ route($routePrefix . '.examination-scores.sheet') }}"
+          id="filter-form"
+          class="flex flex-wrap items-end gap-3">
 
-        <form method="GET"
-              action="{{ route($routePrefix . '.examination-scores.sheet') }}"
-              id="filter-form"
-              class="flex flex-wrap items-end gap-3">
-
-            <div>
-                <label class="block text-xs text-gray-500 mb-1">Class</label>
+        <div class="flex-1 min-w-48">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Class</label>
+            <div class="relative">
+                <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                 <select name="class_id" id="sel-class"
-                        class="border border-gray-300 rounded px-2 py-1.5 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-40">
+                        class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                     @foreach ($classes as $cls)
                         <option value="{{ $cls->id }}" {{ $cls->id === $class->id ? 'selected' : '' }}>
                             {{ $cls->name }} ({{ $cls->grade->name }})
@@ -48,12 +91,15 @@
                     @endforeach
                 </select>
             </div>
+        </div>
 
-            <div>
-                <label class="block text-xs text-gray-500 mb-1">Period</label>
+        <div class="flex-1 min-w-48">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Period</label>
+            <div class="relative">
+                <i class="ti ti-calendar-stats absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                 <select name="period" id="sel-period"
-                        class="border border-gray-300 rounded px-2 py-1.5 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-48">
+                        class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                     <optgroup label="Monthly">
                         @foreach ([1=>'September',2=>'October',3=>'November',4=>'December',5=>'January',6=>'February',7=>'March',8=>'April',9=>'May'] as $num => $name)
                             <option value="month_{{ $num }}" {{ $selectedPeriod === 'month_'.$num ? 'selected' : '' }}>
@@ -67,62 +113,21 @@
                     </optgroup>
                 </select>
             </div>
+        </div>
 
-        </form>
-
-        @if ($isAdmin)
-            <div class="ml-auto flex items-end">
-                @if ($isLocked)
-                    <form method="POST" action="{{ route('admin.examination-scores.unlock') }}">
-                        @csrf
-                        <input type="hidden" name="class_id"         value="{{ $class->id }}">
-                        <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
-                        <input type="hidden" name="period_type"      value="month">
-                        <input type="hidden" name="month"            value="{{ $month }}">
-                        <button type="submit"
-                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-                                       bg-red-50 border border-red-200 text-red-700 rounded
-                                       hover:bg-red-100 transition-colors">
-                            🔒 Locked — Click to Unlock
-                        </button>
-                    </form>
-                @else
-                    <form method="POST" action="{{ route('admin.examination-scores.lock') }}">
-                        @csrf
-                        <input type="hidden" name="class_id"         value="{{ $class->id }}">
-                        <input type="hidden" name="academic_year_id" value="{{ $academicYear->id }}">
-                        <input type="hidden" name="period_type"      value="month">
-                        <input type="hidden" name="month"            value="{{ $month }}">
-                        <button type="submit"
-                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-                                       bg-gray-50 border border-gray-200 text-gray-500 rounded
-                                       hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-700
-                                       transition-colors">
-                            🔓 Unlocked — Click to Lock
-                        </button>
-                    </form>
-                @endif
-            </div>
-        @else
-            @if ($isLocked)
-                <div class="ml-auto flex items-end">
-                    <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded">
-                        🔒 Locked by Admin
-                    </span>
-                </div>
-            @endif
-        @endif
-
-    </div>
+    </form>
 </div>
 
+{{-- Score Sheet --}}
 @if ($enrollments->isEmpty())
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8 text-center text-gray-400 text-sm">
-        No active students in this class.
+    <div class="bg-white rounded-xl border border-gray-200 px-5 py-12 text-center">
+        <i class="ti ti-users-off text-4xl text-gray-300 block mb-2"></i>
+        <p class="text-gray-400 text-sm">No active students in this class.</p>
     </div>
 @elseif ($subjects->isEmpty())
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8 text-center text-gray-400 text-sm">
-        No subjects configured for {{ $class->grade->name }}.
+    <div class="bg-white rounded-xl border border-gray-200 px-5 py-12 text-center">
+        <i class="ti ti-book-off text-4xl text-gray-300 block mb-2"></i>
+        <p class="text-gray-400 text-sm">No subjects configured for {{ $class->grade->name }}.</p>
     </div>
 @else
     <form method="POST" action="{{ $saveRoute }}">
@@ -130,7 +135,7 @@
         <input type="hidden" name="class_id" value="{{ $class->id }}">
         <input type="hidden" name="month"    value="{{ $month }}">
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -173,16 +178,16 @@
                                                min="0" max="{{ $subject->max_score }}" step="0.5"
                                                placeholder="—" {{ $isLocked ? 'readonly' : '' }}
                                                data-row="{{ $rowIndex }}" data-col="{{ $colIndex }}"
-                                               class="score-input w-20 text-center border rounded px-1 py-1 text-sm
-                                                      focus:outline-none focus:ring-2 focus:ring-blue-400
+                                               class="score-input w-20 text-center border rounded-lg px-1 py-1 text-sm
+                                                      focus:outline-none focus:ring-2 focus:ring-green-500
                                                       {{ $hasValue ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200' }}
                                                       {{ $isLocked ? 'opacity-60 cursor-not-allowed' : '' }}">
                                     @elseif ($subject->isGrade())
                                         <select name="scores[{{ $inputKey }}][grade]"
                                                 {{ $isLocked ? 'disabled' : '' }}
                                                 data-row="{{ $rowIndex }}" data-col="{{ $colIndex }}"
-                                                class="score-input w-36 border rounded px-1 py-1 text-xs
-                                                       focus:outline-none focus:ring-2 focus:ring-blue-400
+                                                class="score-input w-36 border rounded-lg px-1 py-1 text-xs
+                                                       focus:outline-none focus:ring-2 focus:ring-green-500
                                                        {{ $hasValue ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200' }}">
                                             <option value="">—</option>
                                             @foreach (['Good', 'Satisfactory', 'Needs Improvement'] as $g)
@@ -193,8 +198,8 @@
                                         <select name="scores[{{ $inputKey }}][pass_fail]"
                                                 {{ $isLocked ? 'disabled' : '' }}
                                                 data-row="{{ $rowIndex }}" data-col="{{ $colIndex }}"
-                                                class="score-input w-20 border rounded px-1 py-1 text-xs
-                                                       focus:outline-none focus:ring-2 focus:ring-blue-400
+                                                class="score-input w-20 border rounded-lg px-1 py-1 text-xs
+                                                       focus:outline-none focus:ring-2 focus:ring-green-500
                                                        {{ $hasValue ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200' }}">
                                             <option value="">—</option>
                                             <option value="Pass" {{ $existing?->pass_fail === 'Pass' ? 'selected' : '' }}>Pass</option>
@@ -210,15 +215,16 @@
         </div>
 
         @if (! $isLocked)
-            <div class="mt-4 flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-4">
-                <p class="text-xs text-gray-400">Green cells are already saved. Empty cells will be skipped.</p>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
-                    Save Scores
+            <div class="mt-4 flex items-center justify-between bg-white rounded-xl border border-gray-200 px-5 py-4">
+                <p class="text-xs text-gray-400"><i class="ti ti-info-circle mr-1"></i>Green cells are already saved. Empty cells will be skipped.</p>
+                <button type="submit"
+                        class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                    <i class="ti ti-device-floppy text-base"></i> Save Scores
                 </button>
             </div>
         @else
-            <div class="mt-4 px-5 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                🔒 This report has been locked by the administrator.
+            <div class="mt-4 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm px-5 py-4 rounded-xl">
+                <i class="ti ti-lock text-base"></i> This report has been locked by the administrator.
             </div>
         @endif
     </form>

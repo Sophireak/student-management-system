@@ -9,71 +9,98 @@
 @endphp
 
 {{-- Header --}}
-<div class="mb-4">
+<div class="mb-5">
     <a href="{{ route($routePrefix . '.student-attendance.index') }}"
-       class="text-sm text-blue-600 hover:underline">← Student Attendance</a>
-    <h2 class="text-lg font-semibold text-gray-700 mt-1">
-        {{ $class->name }} · {{ $class->grade->name }}
-    </h2>
-    <p class="text-sm text-gray-400">{{ $monthName }} {{ $year }}</p>
+       class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-3">
+        <i class="ti ti-arrow-left text-base"></i> Student Attendance
+    </a>
+    <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+            <i class="ti ti-calendar-check text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-xl font-bold text-gray-800">{{ $class->name }} <span class="text-gray-400 font-normal">· {{ $class->grade->name }}</span></h1>
+            <p class="text-sm text-gray-500">{{ $monthName }} {{ $year }}</p>
+        </div>
+    </div>
 </div>
 
 @if (session('success'))
-    <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-        ✅ {{ session('success') }}
+    <div class="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
+        <i class="ti ti-circle-check text-base"></i> {{ session('success') }}
     </div>
 @endif
 
 {{-- Filter bar --}}
-<div class="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
+<div class="mb-4 bg-white rounded-xl border border-gray-200 px-4 py-3">
     <form method="GET"
           action="{{ route($routePrefix . '.student-attendance.sheet') }}"
           id="filter-form"
           class="flex flex-wrap items-end gap-3">
         <div>
-            <label class="block text-xs text-gray-500 mb-1">Class</label>
-            <select name="class_id" id="sel-class"
-                    class="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                @foreach ($classes as $cls)
-                    <option value="{{ $cls->id }}" {{ $cls->id === $class->id ? 'selected' : '' }}>
-                        {{ $cls->name }} ({{ $cls->grade->name }})
-                    </option>
-                @endforeach
-            </select>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Class</label>
+            <div class="relative">
+                <i class="ti ti-building absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                <select name="class_id" id="sel-class"
+                        class="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-colors">
+                    @foreach ($classes as $cls)
+                        <option value="{{ $cls->id }}" {{ $cls->id === $class->id ? 'selected' : '' }}>
+                            {{ $cls->name }} ({{ $cls->grade->name }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div>
-            <label class="block text-xs text-gray-500 mb-1">Month</label>
-            <select name="month" id="sel-month"
-                    class="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                @foreach ([1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'] as $n => $name)
-                    <option value="{{ $n }}" {{ $n === $month ? 'selected' : '' }}>{{ $name }}</option>
-                @endforeach
-            </select>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Month</label>
+            <div class="relative">
+                <i class="ti ti-calendar absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                <select name="month" id="sel-month"
+                        class="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-colors">
+                    @foreach ([1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'] as $n => $name)
+                        <option value="{{ $n }}" {{ $n === $month ? 'selected' : '' }}>{{ $name }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div>
-            <label class="block text-xs text-gray-500 mb-1">Year</label>
-            <select name="year" id="sel-year"
-                    class="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                @for ($y = now()->year; $y >= now()->year - 2; $y--)
-                    <option value="{{ $y }}" {{ $y === $year ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
-            </select>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Year</label>
+            <div class="relative">
+                <i class="ti ti-calendar-stats absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                <select name="year" id="sel-year"
+                        class="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-colors">
+                    @for ($y = now()->year; $y >= now()->year - 2; $y--)
+                        <option value="{{ $y }}" {{ $y === $year ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
+                </select>
+            </div>
         </div>
     </form>
 </div>
 
 {{-- Legend --}}
-<div class="mb-3 flex flex-wrap items-center gap-3 text-xs">
-    <span class="px-2 py-0.5 rounded bg-green-100 text-green-700 font-semibold">P Present</span>
-    <span class="px-2 py-0.5 rounded bg-red-100 text-red-700 font-semibold">A Absent</span>
-    <span class="px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 font-semibold">L Late</span>
-    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">E Excused</span>
-    <span class="text-gray-400">Click a cell to mark attendance</span>
+<div class="mb-4 flex flex-wrap items-center gap-2 text-xs">
+    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
+        <i class="ti ti-circle-check text-sm"></i> Present
+    </span>
+    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 font-semibold">
+        <i class="ti ti-circle-x text-sm"></i> Absent
+    </span>
+    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
+        <i class="ti ti-clock text-sm"></i> Late
+    </span>
+    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+        <i class="ti ti-notes text-sm"></i> Excused
+    </span>
+    <span class="text-gray-400 flex items-center gap-1 ml-1">
+        <i class="ti ti-hand-click text-sm"></i> Click a cell to mark attendance
+    </span>
 </div>
 
 @if ($enrollments->isEmpty())
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-8 text-center text-gray-400 text-sm">
-        No active students in this class.
+    <div class="bg-white rounded-xl border border-gray-200 px-5 py-12 text-center">
+        <i class="ti ti-users-off text-4xl text-gray-300 block mb-2"></i>
+        <p class="text-gray-400 text-sm">No active students in this class.</p>
     </div>
 @else
 
@@ -88,7 +115,7 @@
         {{-- Hidden inputs container — populated by JS --}}
         <div id="hidden-inputs"></div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
             <table class="text-xs border-collapse">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
@@ -121,10 +148,15 @@
                                 elseif ($s === 'excused') $e++;
                             }
                         @endphp
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-2 py-2 text-center text-gray-400 border-r border-gray-200 sticky left-0 bg-white z-10">{{ $rowIndex + 1 }}</td>
                             <td class="px-3 py-2 font-medium text-gray-800 border-r border-gray-200 sticky left-8 bg-white z-10 whitespace-nowrap">
-                                {{ $enrollment->student->full_name }}
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="ti ti-user text-green-600" style="font-size: 11px;"></i>
+                                    </div>
+                                    {{ $enrollment->student->full_name }}
+                                </div>
                             </td>
                             <td class="px-3 py-2 text-gray-500 border-r border-gray-200 whitespace-nowrap">
                                 {{ $enrollment->student->phone ?? '—' }}
@@ -162,8 +194,8 @@
                                                 data-status="{{ $status }}"
                                                 data-note="{{ $attendanceMap[$enrollment->id][$dateStr . '_note'] ?? '' }}"
                                                 onclick="openModal(this)"
-                                                class="attendance-btn w-8 h-7 rounded border font-bold text-xs
-                                                       transition-colors cursor-pointer {{ $cellColor }}">
+                                                class="attendance-btn w-8 h-7 rounded-lg border font-bold text-xs
+                                                       transition-colors cursor-pointer hover:scale-105 {{ $cellColor }}">
                                             {{ $label ?: '·' }}
                                         </button>
                                     @endif
@@ -180,11 +212,13 @@
             </table>
         </div>
 
-        <div class="mt-4 flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200 px-5 py-4">
-            <p class="text-xs text-gray-400">Click a cell to mark. Weekends and future dates are disabled.</p>
+        <div class="mt-4 flex items-center justify-between bg-white rounded-xl border border-gray-200 px-5 py-4">
+            <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                <i class="ti ti-info-circle text-sm"></i> Click a cell to mark. Weekends and future dates are disabled.
+            </p>
             <button type="submit"
-                    class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
-                Save Attendance
+                    class="flex items-center gap-2 px-6 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                <i class="ti ti-device-floppy text-base"></i> Save Attendance
             </button>
         </div>
     </form>
@@ -193,63 +227,68 @@
 {{-- Modal --}}
 <div id="att-modal"
      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
-    <div class="bg-white rounded-xl shadow-xl w-80 p-5">
+    <div class="bg-white rounded-2xl shadow-xl w-80 p-5">
 
         {{-- Modal header --}}
-        <div class="mb-4">
-            <p class="text-xs text-gray-400" id="modal-date"></p>
-            <p class="text-sm font-semibold text-gray-800 mt-0.5" id="modal-student"></p>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-calendar-check text-green-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-400" id="modal-date"></p>
+                <p class="text-sm font-semibold text-gray-800" id="modal-student"></p>
+            </div>
         </div>
 
         {{-- Status buttons --}}
         <div class="grid grid-cols-2 gap-2 mb-4">
             <button type="button" onclick="selectStatus('present')"
                     id="btn-present"
-                    class="status-btn py-3 rounded-lg border-2 font-bold text-sm transition-all
+                    class="status-btn flex items-center justify-center gap-1.5 py-3 rounded-lg border-2 font-semibold text-sm transition-all
                            border-green-300 bg-green-50 text-green-700 hover:bg-green-100">
-                ✅ Present
+                <i class="ti ti-circle-check text-base"></i> Present
             </button>
             <button type="button" onclick="selectStatus('absent')"
                     id="btn-absent"
-                    class="status-btn py-3 rounded-lg border-2 font-bold text-sm transition-all
+                    class="status-btn flex items-center justify-center gap-1.5 py-3 rounded-lg border-2 font-semibold text-sm transition-all
                            border-red-300 bg-red-50 text-red-700 hover:bg-red-100">
-                ❌ Absent
+                <i class="ti ti-circle-x text-base"></i> Absent
             </button>
             <button type="button" onclick="selectStatus('late')"
                     id="btn-late"
-                    class="status-btn py-3 rounded-lg border-2 font-bold text-sm transition-all
+                    class="status-btn flex items-center justify-center gap-1.5 py-3 rounded-lg border-2 font-semibold text-sm transition-all
                            border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100">
-                🕐 Late
+                <i class="ti ti-clock text-base"></i> Late
             </button>
             <button type="button" onclick="selectStatus('excused')"
                     id="btn-excused"
-                    class="status-btn py-3 rounded-lg border-2 font-bold text-sm transition-all
+                    class="status-btn flex items-center justify-center gap-1.5 py-3 rounded-lg border-2 font-semibold text-sm transition-all
                            border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100">
-                📋 Excused
+                <i class="ti ti-notes text-base"></i> Excused
             </button>
         </div>
 
         {{-- Reason --}}
         <div class="mb-4">
-            <label class="block text-xs text-gray-500 mb-1">Reason / Note (optional)</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Reason / Note (optional)</label>
             <textarea id="modal-note" rows="2"
                       placeholder="e.g. sick, family event..."
-                      class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"></textarea>
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
         </div>
 
         {{-- Actions --}}
         <div class="flex gap-2">
             <button type="button" onclick="clearStatus()"
-                    class="flex-1 py-2 text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50">
+                    class="flex-1 py-2 text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
                 Clear
             </button>
             <button type="button" onclick="closeModal()"
-                    class="flex-1 py-2 text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50">
+                    class="flex-1 py-2 text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
                 Cancel
             </button>
             <button type="button" onclick="confirmModal()"
-                    class="flex-1 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
+                    class="flex-1 py-2 text-sm bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
                 Confirm
             </button>
         </div>
