@@ -9,71 +9,22 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         * { box-sizing: border-box; }
-
         body { margin: 0; font-family: 'Segoe UI', sans-serif; }
 
-        /* Aurora background */
-        .bg-aurora {
-    position: fixed; inset: 0; z-index: 0;
-    background-color: #0d1b3e;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='115' viewBox='0 0 100 115'%3E%3Cpolygon points='50 0, 100 28.75, 100 86.25, 50 115, 0 86.25, 0 28.75' fill='none' stroke='rgba(100,140,255,0.12)' stroke-width='1'/%3E%3C/svg%3E");
-    background-size: 80px 92px;
-    overflow: hidden;
-}
-        .aurora-layer {
+        .bg-split {
+            position: fixed; inset: 0; z-index: 0;
+            background: #eef1f8;
+            overflow: hidden;
+        }
+        .bg-split::before {
+            content: '';
             position: absolute;
-            width: 200%; height: 200%;
-            top: -50%; left: -50%;
-            border-radius: 50%;
-            filter: blur(90px);
-            animation: auroraFloat ease-in-out infinite alternate;
-        }
-        .aurora-1 { background: radial-gradient(ellipse, rgba(0,255,180,0.35), transparent 60%); animation-duration:10s; transform-origin:60% 40%; }
-        .aurora-2 { background: radial-gradient(ellipse, rgba(100,60,255,0.3),  transparent 60%); animation-duration:14s; animation-delay:-4s;  transform-origin:30% 70%; }
-        .aurora-3 { background: radial-gradient(ellipse, rgba(0,180,255,0.25),  transparent 60%); animation-duration:18s; animation-delay:-8s;  transform-origin:70% 55%; }
-        .aurora-4 { background: radial-gradient(ellipse, rgba(180,0,255,0.2),   transparent 60%); animation-duration:22s; animation-delay:-12s; transform-origin:40% 30%; }
-        @keyframes auroraFloat {
-            0%   { transform: rotate(0deg)  scale(1); }
-            33%  { transform: rotate(8deg)  scale(1.1); }
-            66%  { transform: rotate(-6deg) scale(0.95); }
-            100% { transform: rotate(4deg)  scale(1.05); }
+            top: 0; left: 0;
+            width: 60%; height: 100%;
+            background: #dfe6f5;
+            clip-path: polygon(0 0, 70% 0, 40% 100%, 0 100%);
         }
 
-        .stars {
-            position: absolute; inset: 0;
-            background-image:
-                radial-gradient(1px 1px at 15% 25%, white, transparent),
-                radial-gradient(1px 1px at 40% 10%, white, transparent),
-                radial-gradient(1.5px 1.5px at 70% 15%, white, transparent),
-                radial-gradient(1px 1px at 85% 40%, white, transparent),
-                radial-gradient(1px 1px at 25% 60%, white, transparent),
-                radial-gradient(1px 1px at 55% 75%, white, transparent),
-                radial-gradient(1.5px 1.5px at 90% 80%, white, transparent),
-                radial-gradient(1px 1px at 10% 90%, white, transparent);
-            animation: twinkle 4s ease-in-out infinite alternate;
-            opacity: 0.6;
-        }
-        @keyframes twinkle { 0%{opacity:0.3} 100%{opacity:0.8} }
-
-        .particle {
-            position: absolute; border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            animation: floatup linear infinite;
-        }
-        @keyframes floatup {
-            0%   { transform:translateY(100vh) scale(0); opacity:0; }
-            10%  { opacity:1; }
-            90%  { opacity:1; }
-            100% { transform:translateY(-10vh) scale(1); opacity:0; }
-        }
-        .p1 { width:6px; height:6px; left:10%; animation-duration:12s; animation-delay:0s; }
-        .p2 { width:4px; height:4px; left:22%; animation-duration:18s; animation-delay:-4s; }
-        .p3 { width:8px; height:8px; left:36%; animation-duration:14s; animation-delay:-8s; }
-        .p4 { width:3px; height:3px; left:50%; animation-duration:20s; animation-delay:-2s; }
-        .p5 { width:5px; height:5px; left:63%; animation-duration:16s; animation-delay:-6s; }
-        .p6 { width:7px; height:7px; left:76%; animation-duration:11s; animation-delay:-10s; }
-
-        /* Page wrapper */
         .page-wrap {
             position: relative; z-index: 10;
             min-height: 100vh;
@@ -83,190 +34,176 @@
             padding: 24px;
         }
 
-        /* Split card */
-        .split-card {
+        .login-card {
             display: flex;
             width: 100%;
-            max-width: 900px;
-            min-height: 560px;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 60px rgba(0,255,180,0.08);
-            animation: cardIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
-        }
-        @keyframes cardIn {
-            from { opacity:0; transform:translateY(40px) scale(0.97); }
-            to   { opacity:1; transform:translateY(0) scale(1); }
-        }
-
-        /* Left panel */
-        .left-panel {
-            flex: 1;
-            background: linear-gradient(145deg, #0f1f4a 0%, #1a1060 50%, #0d2040 100%);
-            padding: 48px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Left panel inner glow */
-        .left-panel::before {
-            content: '';
-            position: absolute;
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(0,255,180,0.12), transparent 70%);
-            top: -60px; left: -60px;
-            border-radius: 50%;
-            animation: pulse 6s ease-in-out infinite;
-        }
-        .left-panel::after {
-            content: '';
-            position: absolute;
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(100,60,255,0.15), transparent 70%);
-            bottom: -40px; right: -40px;
-            border-radius: 50%;
-            animation: pulse 8s ease-in-out infinite reverse;
-        }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
-
-        /* Logo icon */
-        .logo-icon {
-            width: 72px; height: 72px;
-            background: linear-gradient(135deg, rgba(0,255,180,0.2), rgba(100,60,255,0.2));
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 32px;
-            position: relative;
-            z-index: 1;
-            animation: iconPulse 3s ease-in-out infinite;
-        }
-        @keyframes iconPulse {
-            0%,100% { box-shadow: 0 0 20px rgba(0,255,180,0.2); }
-            50%      { box-shadow: 0 0 40px rgba(0,255,180,0.5), 0 0 60px rgba(100,60,255,0.2); }
-        }
-
-        .left-panel h2 {
-            color: #fff;
-            font-size: 26px;
-            font-weight: 700;
-            line-height: 1.3;
-            margin: 0 0 12px;
-            position: relative; z-index: 1;
-        }
-        .left-panel h2 span {
-            background: linear-gradient(90deg, #00ffb4, #7b6fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .left-panel p {
-            color: rgba(255,255,255,0.55);
-            font-size: 14px;
-            line-height: 1.6;
-            margin: 0 0 40px;
-            position: relative; z-index: 1;
-        }
-
-        /* Feature icons */
-        .features {
-            display: flex;
-            gap: 28px;
-            position: relative; z-index: 1;
-        }
-        .feature {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255,255,255,0.6);
-            font-size: 12px;
-        }
-        .feature-icon {
-            width: 44px; height: 44px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #00ffb4;
-            transition: all 0.3s;
-        }
-        .feature:hover .feature-icon {
-            background: rgba(0,255,180,0.1);
-            border-color: rgba(0,255,180,0.3);
-            transform: translateY(-3px);
-        }
-
-        /* Right panel */
-        .right-panel {
-            flex: 1;
+            max-width: 960px;
+            min-height: 520px;
             background: #fff;
-            padding: 48px 40px;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(30,40,80,0.12);
+        }
+
+        .illus-panel {
+            flex: 1.1;
+            padding: 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .brand {
+            position: absolute;
+            top: 36px; left: 40px;
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 800; font-size: 18px;
+            color: #0f172a;
+        }
+        .brand i { color: #16a34a; font-size: 22px; }
+
+        .form-panel {
+            flex: 1;
+            padding: 56px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
         }
 
-        /* Footer */
+        .lang-badge {
+            position: absolute;
+            top: 20px; right: 20px;
+            cursor: pointer;
+            z-index: 20;
+        }
+        .lang-pill {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 13px; font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid;
+            transition: all 0.15s;
+        }
+        .lang-pill.is-en {
+            color: #2563eb;
+            border-color: #bfdbfe;
+            background: #eff6ff;
+        }
+        .lang-pill.is-km {
+            color: #dc2626;
+            border-color: #fecaca;
+            background: #fef2f2;
+        }
+        .lang-menu {
+            display: none;
+            position: absolute;
+            top: 38px; right: 0;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            padding: 6px;
+            min-width: 120px;
+            z-index: 20;
+        }
+        .lang-menu.open { display: block; }
+        .lang-menu div {
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .lang-menu div:hover { background: #f1f5f9; }
+        .lang-menu .opt-en { color: #2563eb; }
+        .lang-menu .opt-km { color: #dc2626; }
+
         .page-footer {
             position: relative; z-index: 10;
             text-align: center;
-            color: rgba(255,255,255,0.4);
+            color: #94a3b8;
             font-size: 12px;
-            margin-top: 20px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 760px) {
+            .page-wrap { padding: 14px; }
+            .login-card {
+                flex-direction: column;
+                min-height: 0;
+                max-width: 420px;
+                border-radius: 22px;
+            }
+            .illus-panel { display: none; }
+            .form-panel { padding: 56px 26px 32px; }
+            .lang-badge { top: 14px; right: 14px; }
+            .lang-pill { font-size: 12px; padding: 5px 10px; }
         }
     </style>
 </head>
 <body class="font-sans antialiased">
 
-    {{-- Aurora background --}}
-    <div class="bg-aurora">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%, rgba(30,60,180,0.4), transparent 60%),radial-gradient(ellipse at 70% 50%, rgba(10,30,100,0.5), transparent 60%);"></div>
-        <div class="particle p1"></div><div class="particle p2"></div>
-        <div class="particle p3"></div><div class="particle p4"></div>
-        <div class="particle p5"></div><div class="particle p6"></div>
-    </div>
+    <div class="bg-split"></div>
 
     <div class="page-wrap">
-        <div class="w-full" style="max-width:900px;">
+        <div class="w-full" style="max-width:960px;">
 
-            <div class="split-card">
+            <div class="login-card">
 
-                {{-- Left panel --}}
-                <div class="left-panel">
-                    <div class="logo-icon">
-                        <i class="ti ti-school text-white text-3xl"></i>
-                    </div>
+                {{-- Illustration panel --}}
+                <div class="illus-panel">
+                    <div class="brand"><i class="ti ti-school"></i> School Portal</div>
 
-                    <h2>Empowering schools.<br><span>Inspiring futures.</span></h2>
-                    <p>Streamline administration, enhance communication, and focus on what matters most — <span style="color:#00ffb4;">your students.</span></p>
+                    <svg viewBox="0 0 320 300" width="100%" style="max-width:300px;">
+                        {{-- main card --}}
+                        <rect x="60" y="40" width="170" height="190" rx="14" fill="#eaf3de"/>
+                        <rect x="78" y="62" width="100" height="10" rx="5" fill="#bcd9a4"/>
+                        <rect x="78" y="84" width="134" height="10" rx="5" fill="#bcd9a4"/>
+                        <rect x="78" y="106" width="114" height="10" rx="5" fill="#bcd9a4"/>
+                        <rect x="78" y="148" width="80" height="26" rx="13" fill="#16a34a"/>
 
-                    <div class="features">
-                        <div class="feature">
-                            <div class="feature-icon"><i class="ti ti-shield-check"></i></div>
-                            <span>Secure</span>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon"><i class="ti ti-bolt"></i></div>
-                            <span>Fast</span>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon"><i class="ti ti-chart-bar"></i></div>
-                            <span>Reliable</span>
-                        </div>
-                    </div>
+                        {{-- person sitting at the card --}}
+                        <circle cx="145" cy="230" r="20" fill="#fcd9a8"/>
+                        <path d="M112 286 Q145 258 178 286 L172 300 L118 300 Z" fill="#0f172a"/>
+                        <rect x="132" y="246" width="26" height="18" fill="#fcd9a8"/>
+
+                        {{-- gear icon, anchored top-right of card --}}
+                        <circle cx="232" cy="58" r="24" fill="#fff" stroke="#16a34a" stroke-width="2"/>
+                        <circle cx="232" cy="58" r="8" fill="#16a34a"/>
+                        <g stroke="#16a34a" stroke-width="3">
+                            <line x1="232" y1="38" x2="232" y2="44"/>
+                            <line x1="232" y1="72" x2="232" y2="78"/>
+                            <line x1="212" y1="58" x2="218" y2="58"/>
+                            <line x1="246" y1="58" x2="252" y2="58"/>
+                        </g>
+
+                        {{-- lock icon, anchored bottom-right of card --}}
+                        <circle cx="248" cy="196" r="26" fill="#fff" stroke="#16a34a" stroke-width="2"/>
+                        <rect x="236" y="194" width="24" height="18" rx="3" fill="#16a34a"/>
+                        <path d="M240 194 v-6 a8 8 0 0 1 16 0 v6" fill="none" stroke="#16a34a" stroke-width="3"/>
+
+                        {{-- small plant, bottom-left of card --}}
+                        <rect x="38" y="252" width="22" height="20" rx="3" fill="#cfe8b8"/>
+                        <path d="M49 252 Q38 226 49 204 Q60 226 49 252 Z" fill="#16a34a"/>
+                        <path d="M49 252 Q59 230 72 222 Q67 244 49 252 Z" fill="#3fae5e"/>
+                    </svg>
                 </div>
 
-                {{-- Right panel --}}
-                <div class="right-panel">
+                {{-- Form panel --}}
+                <div class="form-panel">
+
+                    <div class="lang-badge">
+                        <div class="lang-pill is-en" id="lang-pill" onclick="document.getElementById('lang-menu').classList.toggle('open')">
+                            <i class="ti ti-world"></i> <span id="lang-current-text">EN</span>
+                        </div>
+                        <div id="lang-menu" class="lang-menu">
+                            <div class="opt-en" onclick="setLang('en')"><i class="ti ti-flag"></i> English</div>
+                            <div class="opt-km" onclick="setLang('km')"><i class="ti ti-flag"></i> ខ្មែរ</div>
+                        </div>
+                    </div>
+
                     @yield('content')
                 </div>
 
@@ -280,5 +217,42 @@
     </div>
 
     @stack('scripts')
+
+    {{-- Google Translate widget (hidden UI, triggered via dropdown) --}}
+    <div id="google_translate_element" style="display:none;"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                { pageLanguage: 'en', includedLanguages: 'en,km', autoDisplay: false },
+                'google_translate_element'
+            );
+        }
+
+        function setLang(lang) {
+            const value = lang === 'en' ? '/en/en' : '/en/km';
+            document.cookie = 'googtrans=' + value + '; path=/';
+            document.cookie = 'googtrans=' + value + '; path=/; domain=' + window.location.hostname;
+            window.location.reload();
+        }
+
+        // Reflect current language on the pill (color + label)
+        (function initLangPill() {
+            const match = document.cookie.match(/googtrans=\/en\/(en|km)/);
+            const current = match ? match[1] : 'en';
+            const pill = document.getElementById('lang-pill');
+            const text = document.getElementById('lang-current-text');
+            if (!pill || !text) return;
+            if (current === 'km') {
+                pill.classList.remove('is-en');
+                pill.classList.add('is-km');
+                text.textContent = 'ខ្មែរ';
+            } else {
+                pill.classList.remove('is-km');
+                pill.classList.add('is-en');
+                text.textContent = 'EN';
+            }
+        })();
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
