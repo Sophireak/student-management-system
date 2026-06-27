@@ -5,12 +5,27 @@
            transition-transform duration-200 ease-in-out
            md:relative md:translate-x-0"
 >
-    {{-- Logo --}}
-    <div class="h-16 flex items-center gap-2 px-5 border-b border-gray-100">
-        <div class="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
-            <i class="ti ti-school text-white text-base"></i>
+    {{-- Logo + desktop collapse button --}}
+    <div id="sidebar-logo-area" class="h-16 flex items-center justify-between border-b border-gray-100 px-4">
+
+        {{-- Brand (hidden when collapsed) --}}
+        <div class="flex items-center gap-2.5 sidebar-label">
+            <span class="text-2xl leading-none">🎓</span>
+            <div class="flex flex-col leading-tight">
+                <span class="text-sm font-extrabold text-gray-800 tracking-tight">{{ config('app.name') }}</span>
+                <span class="text-[10px] font-medium text-green-600 uppercase tracking-widest">School Portal</span>
+            </div>
         </div>
-        <span class="text-base font-bold text-gray-800 tracking-tight">{{ config('app.name') }}</span>
+
+        {{-- Toggle button (always visible, desktop only) --}}
+        <button
+            id="sidebar-toggle-btn"
+            class="hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            onclick="toggleSidebar()"
+            aria-label="Collapse sidebar"
+        >
+            <i id="sidebar-toggle-icon" class="ti ti-layout-sidebar-left-collapse text-lg"></i>
+        </button>
     </div>
 
     {{-- Navigation --}}
@@ -20,17 +35,17 @@
         <x-admin.nav-item route="admin.dashboard" icon="ti ti-layout-dashboard" label="Dashboard" />
 
         {{-- Daily Tasks --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Daily Tasks</div>
+        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Daily Tasks</div>
         <x-admin.nav-item route="admin.student-attendance.index" icon="ti ti-calendar-check" label="Take Attendance" />
         <x-admin.nav-item route="admin.examination-scores.index" icon="ti ti-pencil"          label="Enter Scores" />
 
         {{-- Management --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Management</div>
+        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Management</div>
         <x-admin.nav-item route="admin.students.index" icon="ti ti-users"  label="Students" />
         <x-admin.nav-item route="admin.teachers.index" icon="ti ti-school" label="Teachers" />
 
         {{-- Reports (collapsible) --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Reports</div>
+        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Reports</div>
         <x-admin.nav-group
             icon="ti ti-chart-bar"
             label="Reports"
@@ -44,7 +59,7 @@
         </x-admin.nav-group>
 
         {{-- Academic Setup (collapsible) --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Academic Setup</div>
+        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Academic Setup</div>
         <x-admin.nav-group
             icon="ti ti-settings-2"
             label="Academic Setup"
@@ -60,7 +75,7 @@
     </nav>
 
     {{-- Footer --}}
-    <div class="border-t border-gray-100 px-5 py-3">
+    <div class="border-t border-gray-100 px-5 py-3 sidebar-label">
         <p class="text-xs text-gray-400">Logged in as</p>
         <p class="text-sm font-semibold text-gray-700">{{ auth()->user()->name }}</p>
     </div>

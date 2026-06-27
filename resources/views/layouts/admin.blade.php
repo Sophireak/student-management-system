@@ -6,7 +6,28 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>{{ config('app.name') }} – {{ $title ?? 'Dashboard' }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    {{-- Prevent sidebar transition flicker on page load --}}
+    <style>
+        #sidebar { transition: none !important; }
+        [x-cloak] { display: none !important; }
+    </style>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Re-enable transitions after first paint --}}
+    <script>
+        window.addEventListener('load', () => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const style = document.createElement('style');
+                    style.textContent = '#sidebar { transition: none !important; display: none; }';
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) sidebar.style.transition = '';
+                });
+            });
+        });
+    </script>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
     <div class="flex h-screen overflow-hidden">

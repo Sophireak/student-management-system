@@ -5,5 +5,5 @@
               : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800' }}"
 >
     <i class="{{ $icon }} text-base {{ $isActive() ? 'text-green-600' : 'text-gray-400' }}"></i>
-    <span>{{ $label }}</span>
+    <span class="sidebar-label">{{ $label }}</span>
 </a>

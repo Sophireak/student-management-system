@@ -2,15 +2,19 @@
 <header class="h-16 bg-white border-b border-gray-200 flex items-center
                justify-between px-4 md:px-6 flex-shrink-0">
     <div class="flex items-center gap-4">
-        {{-- Sidebar toggle — visible on all screen sizes --}}
+        {{-- Mobile only hamburger (desktop uses sidebar's own toggle) --}}
         <button
-            class="text-gray-500 hover:text-gray-700 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             onclick="toggleSidebar()"
             aria-label="Toggle sidebar"
         >
             <i class="ti ti-menu-2 text-xl"></i>
         </button>
-        <h1 class="text-lg font-semibold text-gray-800">{{ $title }}</h1>
+        {{-- School name + page title --}}
+        <div class="flex flex-col">
+            <span class="text-sm font-bold text-gray-800 leading-tight">{{ config('app.school_name') }}</span>
+            <span class="text-xs text-gray-400 leading-tight">{{ $title }}</span>
+        </div>
     </div>
     {{-- Right side --}}
     <div class="flex items-center gap-4">
@@ -31,6 +35,7 @@
             </button>
             <div
                 x-show="open"
+                x-cloak
                 @click.outside="open = false"
                 x-transition
                 class="absolute right-0 mt-2 w-44 bg-white border
@@ -56,19 +61,33 @@
         </div>
     </div>
 </header>
+
 <script>
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
+        const icon = document.getElementById('sidebar-toggle-icon');
+        const logoArea = document.getElementById('sidebar-logo-area');
         const isMobile = window.innerWidth < 768;
 
         if (isMobile) {
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         } else {
-            // Toggle the inline margin directly — default state is closed (-16rem)
-            const isOpen = sidebar.style.marginLeft === '0rem' || sidebar.style.marginLeft === '0px';
-            sidebar.style.marginLeft = isOpen ? '-16rem' : '0rem';
+            const isCollapsing = sidebar.classList.contains('w-64');
+            sidebar.classList.toggle('w-64');
+            sidebar.classList.toggle('w-16');
+            sidebar.querySelectorAll('.sidebar-label').forEach(el => el.classList.toggle('hidden'));
+
+            if (isCollapsing) {
+                logoArea.classList.remove('justify-between');
+                logoArea.classList.add('justify-center');
+                icon.classList.replace('ti-layout-sidebar-left-collapse', 'ti-layout-sidebar-left-expand');
+            } else {
+                logoArea.classList.remove('justify-center');
+                logoArea.classList.add('justify-between');
+                icon.classList.replace('ti-layout-sidebar-left-expand', 'ti-layout-sidebar-left-collapse');
+            }
         }
     }
 </script>
