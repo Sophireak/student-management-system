@@ -8,9 +8,9 @@ use App\Models\AttendanceSession;
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class StudentAttendanceController extends Controller
@@ -32,22 +32,25 @@ class StudentAttendanceController extends Controller
         if (! $assigned) abort(403, 'You are not assigned to this class.');
     }
 
-    public function index(): View
+    private function getTeacherClasses()
     {
         $teacher = $this->getTeacher();
-
-        $classes = SchoolClass::with(['grade', 'academicYear'])
+        return SchoolClass::with(['grade', 'academicYear'])
             ->whereHas('classTeachers', fn($q) => $q->where('teacher_id', $teacher->id))
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
+            ->whereHas('academicYear',  fn($q) => $q->where('is_active', true))
             ->orderBy('grade_id')
             ->orderBy('name')
             ->get();
-
-        return view('student-attendance.index', compact('classes'));
     }
 
-    public function sheet(Request $request): View
+    public function index(Request $request): View
     {
+        $classes = $this->getTeacherClasses();
+
+        if (! $request->filled('class_id')) {
+            return view('teacher.attendance-sessions.index', compact('classes'));
+        }
+
         $request->validate([
             'class_id' => ['required', 'exists:classes,id'],
             'month'    => ['required', 'integer', 'min:1', 'max:12'],
@@ -56,15 +59,12 @@ class StudentAttendanceController extends Controller
 
         $this->authorizeClass($request->class_id);
 
-        $teacher = $this->getTeacher();
-        $class   = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
-        $month   = (int) $request->month;
-        $year    = (int) $request->year;
+        $class = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
+        $month = (int) $request->month;
+        $year  = (int) $request->year;
 
-        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
-        $dates = collect(range(1, $daysInMonth))->map(fn($d) =>
-            Carbon::create($year, $month, $d)
-        );
+        $dates = collect(range(1, Carbon::create($year, $month)->daysInMonth))
+            ->map(fn($d) => Carbon::create($year, $month, $d));
 
         $enrollments = Enrollment::with('student')
             ->where('class_id', $class->id)
@@ -94,66 +94,59 @@ class StudentAttendanceController extends Controller
             }
         }
 
-        $classes = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas('classTeachers', fn($q) => $q->where('teacher_id', $teacher->id))
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
-            ->orderBy('grade_id')->orderBy('name')->get();
-
-        return view('student-attendance.sheet', compact(
-            'class', 'month', 'year', 'dates',
-            'enrollments', 'attendanceMap', 'sessions', 'classes'
+        return view('teacher.attendance-sessions.index', compact(
+            'classes', 'class', 'month', 'year',
+            'dates', 'enrollments', 'attendanceMap', 'sessions'
         ));
     }
 
-    public function save(Request $request): RedirectResponse
+    public function sheet(Request $request): RedirectResponse
+    {
+        return redirect()->route('teacher.student-attendance.index', $request->only([
+            'class_id', 'month', 'year'
+        ]));
+    }
+
+    public function saveSingle(Request $request): JsonResponse
     {
         $request->validate([
-            'class_id'   => ['required', 'exists:classes,id'],
-            'month'      => ['required', 'integer', 'min:1', 'max:12'],
-            'year'       => ['required', 'integer'],
-            'attendance' => ['required', 'array'],
+            'class_id'      => ['required', 'exists:classes,id'],
+            'date'          => ['required', 'date_format:Y-m-d'],
+            'enrollment_id' => ['required', 'exists:enrollments,id'],
+            'status'        => ['nullable', 'in:present,absent,late,excused'],
+            'note'          => ['nullable', 'string', 'max:255'],
         ]);
 
         $this->authorizeClass($request->class_id);
 
-        $classId = $request->class_id;
-        $month   = (int) $request->month;
-        $year    = (int) $request->year;
-
-        $validEnrollmentIds = Enrollment::where('class_id', $classId)
+        $enrollment = Enrollment::where('id', $request->enrollment_id)
+            ->where('class_id', $request->class_id)
             ->where('status', 'active')
-            ->pluck('id')
-            ->flip();
+            ->firstOrFail();
 
-        DB::transaction(function () use ($request, $classId, $month, $year, $validEnrollmentIds) {
-            foreach ($request->attendance as $date => $enrollmentStatuses) {
-                $carbonDate = Carbon::createFromFormat('Y-m-d', $date);
-                if ($carbonDate->month !== $month || $carbonDate->year !== $year) continue;
+        $session = AttendanceSession::firstOrCreate(
+            ['class_id' => $request->class_id, 'session_date' => $request->date],
+            ['subject_id' => null, 'period' => null, 'topic' => null]
+        );
 
-                $session = AttendanceSession::firstOrCreate(
-                    ['class_id' => $classId, 'session_date' => $date],
-                    ['subject_id' => null, 'period' => null, 'topic' => null]
-                );
+        if (empty($request->status)) {
+            Attendance::where([
+                'enrollment_id'         => $enrollment->id,
+                'attendance_session_id' => $session->id,
+            ])->delete();
+        } else {
+            Attendance::updateOrCreate(
+                [
+                    'enrollment_id'         => $enrollment->id,
+                    'attendance_session_id' => $session->id,
+                ],
+                [
+                    'status' => $request->status,
+                    'notes'  => $request->note,
+                ]
+            );
+        }
 
-                foreach ($enrollmentStatuses as $enrollmentId => $status) {
-                    if (! isset($validEnrollmentIds[$enrollmentId])) continue;
-                    if (! in_array($status, ['present', 'absent', 'late', 'excused'])) continue;
-
-                    Attendance::updateOrCreate(
-                        [
-                            'enrollment_id'         => $enrollmentId,
-                            'attendance_session_id' => $session->id,
-                        ],
-                        ['status' => $status]
-                    );
-                }
-            }
-        });
-
-        return redirect()->route('teacher.student-attendance.sheet', [
-            'class_id' => $classId,
-            'month'    => $month,
-            'year'     => $year,
-        ])->with('success', 'Attendance saved successfully.');
+        return response()->json(['success' => true]);
     }
 }

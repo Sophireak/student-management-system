@@ -2,12 +2,7 @@
 
 @section('content')
 
-<div class="mb-4">
-    <h2 class="text-lg font-semibold text-gray-700">Score Sheet</h2>
-    <p class="text-sm text-gray-400 mt-0.5">
-        Select one of your classes and an exam session to enter scores.
-    </p>
-</div>
+<p class="text-sm text-gray-400 mb-4">Select a class and exam session to enter scores.</p>
 
 @include('partials.score-sheet-filters', [
     'classes'         => $classes,

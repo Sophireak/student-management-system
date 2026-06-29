@@ -7,7 +7,6 @@
     <title>{{ config('app.name') }} – {{ $title ?? 'Dashboard' }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
-    {{-- Prevent sidebar transition flicker on page load --}}
     <style>
         #sidebar { transition: none !important; }
         [x-cloak] { display: none !important; }
@@ -15,13 +14,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Re-enable transitions after first paint --}}
     <script>
         window.addEventListener('load', () => {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    const style = document.createElement('style');
-                    style.textContent = '#sidebar { transition: none !important; display: none; }';
                     const sidebar = document.getElementById('sidebar');
                     if (sidebar) sidebar.style.transition = '';
                 });
@@ -40,7 +36,9 @@
             @if (auth()->user()->isAdmin())
                 <x-admin.navbar :title="$title ?? 'Dashboard'" />
             @else
-                <x-teacher.navbar :title="$title ?? 'Dashboard'" />
+                <x-teacher.navbar :title="$title ?? 'Dashboard'">
+                    @stack('navbar-actions')
+                </x-teacher.navbar>
             @endif
             <main class="flex-1 overflow-y-auto p-6">
                 <x-admin.alert />

@@ -2,8 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Teacher\DashboardController;
-use App\Http\Controllers\Teacher\AttendanceSessionController;
-use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\StudentAttendanceController;
 use App\Http\Controllers\Teacher\ExaminationScoreController;
 use App\Http\Controllers\Teacher\MonthlyReportController;
@@ -21,11 +19,11 @@ Route::middleware(['auth', 'verified', 'teacher'])
         // ── Dashboard ────────────────────────────────────────────
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ── Student Attendance ────────────────────────────────────
+        // ── Student Attendance ────────────────────────────────
         Route::prefix('student-attendance')->name('student-attendance.')->group(function () {
-            Route::get('/',      [StudentAttendanceController::class, 'index'])->name('index');
-            Route::get('/sheet', [StudentAttendanceController::class, 'sheet'])->name('sheet');
-            Route::post('/save', [StudentAttendanceController::class, 'save'])->name('save');
+            Route::get('/',            [StudentAttendanceController::class, 'index'])->name('index');
+            Route::get('/sheet',       [StudentAttendanceController::class, 'sheet'])->name('sheet');
+            Route::post('/save-single', [StudentAttendanceController::class, 'saveSingle'])->name('save-single');
         });
 
         // ── Examination Scores ────────────────────────────────────
