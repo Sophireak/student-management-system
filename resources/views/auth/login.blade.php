@@ -82,12 +82,12 @@
     </div>
     --}}
 
-    <div class="text-center text-sm text-gray-500 mt-5">
+    <!-- <div class="text-center text-sm text-gray-500 mt-5">
         Don't have an account?
         @if (Route::has('register'))
             <a href="{{ route('register') }}" class="text-green-600 font-medium hover:underline">Sign up</a>
         @endif
-    </div>
+    </div> -->
     @if (Route::has('password.request'))
         <div class="text-center mt-2">
             <a href="{{ route('password.request') }}" class="text-xs text-gray-400 hover:text-green-600 hover:underline">

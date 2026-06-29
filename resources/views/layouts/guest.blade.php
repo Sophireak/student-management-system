@@ -298,17 +298,8 @@
                         <path d="M49 252 Q59 230 72 222 Q67 244 49 252 Z" fill="#3fae5e"/>
                     </svg>
                 </div>
-                {{-- Form panel --}}
+               
                 <div class="form-panel">
-                    <div class="lang-badge">
-                        <div class="lang-pill is-en" id="lang-pill" onclick="document.getElementById('lang-menu').classList.toggle('open')">
-                            <i class="ti ti-world"></i> <span id="lang-current-text">EN</span>
-                        </div>
-                        <div id="lang-menu" class="lang-menu">
-                            <div class="opt-en" onclick="setLang('en')"><i class="ti ti-flag"></i> English</div>
-                            <div class="opt-km" onclick="setLang('km')"><i class="ti ti-flag"></i> ខ្មែរ</div>
-                        </div>
-                    </div>
                     <div class="mobile-brand">
                         <div class="mobile-brand-icon"><i class="ti ti-school"></i></div>
                         <div class="mobile-brand-text">
@@ -325,40 +316,6 @@
             </div>
         </div>
     </div>
-    @stack('scripts')
-    {{-- Google Translate widget (hidden UI, triggered via dropdown) --}}
-    <div id="google_translate_element" style="display:none;"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement(
-                { pageLanguage: 'en', includedLanguages: 'en,km', autoDisplay: false },
-                'google_translate_element'
-            );
-        }
-        function setLang(lang) {
-            const value = lang === 'en' ? '/en/en' : '/en/km';
-            document.cookie = 'googtrans=' + value + '; path=/';
-            document.cookie = 'googtrans=' + value + '; path=/; domain=' + window.location.hostname;
-            window.location.reload();
-        }
-        // Reflect current language on the pill (color + label)
-        (function initLangPill() {
-            const match = document.cookie.match(/googtrans=\/en\/(en|km)/);
-            const current = match ? match[1] : 'en';
-            const pill = document.getElementById('lang-pill');
-            const text = document.getElementById('lang-current-text');
-            if (!pill || !text) return;
-            if (current === 'km') {
-                pill.classList.remove('is-en');
-                pill.classList.add('is-km');
-                text.textContent = 'ខ្មែរ';
-            } else {
-                pill.classList.remove('is-km');
-                pill.classList.add('is-en');
-                text.textContent = 'EN';
-            }
-        })();
-    </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+   
 </body>
 </html>
