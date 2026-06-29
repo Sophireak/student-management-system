@@ -298,7 +298,7 @@
                         <path d="M49 252 Q59 230 72 222 Q67 244 49 252 Z" fill="#3fae5e"/>
                     </svg>
                 </div>
-                {{-- Form panel --}}
+               
                 <div class="form-panel">
                     <div class="mobile-brand">
                         <div class="mobile-brand-icon"><i class="ti ti-school"></i></div>
