@@ -5,7 +5,7 @@
     <div class="flex items-center gap-4">
         {{-- Mobile hamburger --}}
         <button
-            class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none"
+            class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             onclick="toggleSidebar()"
             aria-label="Toggle sidebar"
         >
@@ -15,14 +15,15 @@
             </svg>
         </button>
 
-        {{-- Page title --}}
-        <h1 class="text-lg font-semibold text-gray-800">{{ $title }}</h1>
+        {{-- School name + page title --}}
+        <div class="flex flex-col">
+            <span class="text-sm font-bold text-gray-800 leading-tight">{{ config('app.school_name') }}</span>
+            <span class="text-xs text-gray-400 leading-tight">{{ $title }}</span>
+        </div>
     </div>
 
     {{-- Right side --}}
     <div class="flex items-center gap-4">
-
-        {{-- User dropdown --}}
         <div class="relative" x-data="{ open: false }">
             <button
                 @click="open = !open"
@@ -36,6 +37,7 @@
 
             <div
                 x-show="open"
+                x-cloak
                 @click.outside="open = false"
                 x-transition
                 class="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-50"
@@ -51,16 +53,35 @@
                 </form>
             </div>
         </div>
-
     </div>
 </header>
 
-{{-- Mobile sidebar toggle script --}}
 <script>
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
+        const icon = document.getElementById('sidebar-toggle-icon');
+        const logoArea = document.getElementById('sidebar-logo-area');
+        const isMobile = window.innerWidth < 768;
+
+        if (isMobile) {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        } else {
+            const isCollapsing = sidebar.classList.contains('w-60');
+            sidebar.classList.toggle('w-60');
+            sidebar.classList.toggle('w-16');
+            sidebar.querySelectorAll('.sidebar-label').forEach(el => el.classList.toggle('hidden'));
+
+            if (isCollapsing) {
+                logoArea.classList.remove('justify-between');
+                logoArea.classList.add('justify-center');
+                icon.classList.replace('ti-layout-sidebar-left-collapse', 'ti-layout-sidebar-left-expand');
+            } else {
+                logoArea.classList.remove('justify-center');
+                logoArea.classList.add('justify-between');
+                icon.classList.replace('ti-layout-sidebar-left-expand', 'ti-layout-sidebar-left-collapse');
+            }
+        }
     }
 </script>

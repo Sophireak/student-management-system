@@ -14,7 +14,14 @@ class ClassTeacherSeeder extends Seeder
 {
     public function run(): void
     {
-        $year = AcademicYear::where('is_active', true)->first();
+        $year = AcademicYear::firstOrCreate(
+    ['is_active' => true],
+    [
+        'name'       => '2024-2025',
+        'start_date' => '2024-10-01',
+        'end_date'   => '2025-07-31',
+    ]
+);
 
         // Create 6 classes — one per grade
         $classNames = ['ក', 'ខ', 'គ', 'ឃ', 'ង', 'ច'];
