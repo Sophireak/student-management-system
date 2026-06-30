@@ -4,16 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <title>{{ config('app.name') }} â€“ {{ $title ?? 'Dashboard' }}</title>
+    <title>{{ config('app.name') }} – {{ $title ?? 'Dashboard' }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-
     <style>
         #sidebar { transition: none !important; }
         [x-cloak] { display: none !important; }
     </style>
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     <script>
         window.addEventListener('load', () => {
             requestAnimationFrame(() => {
@@ -34,10 +31,12 @@
         @endif
         <div class="flex flex-col flex-1 overflow-hidden">
             @if (auth()->user()->isAdmin())
-                <x-admin.navbar :title="$title ?? 'Dashboard'" />
+                <x-admin.navbar :title="$title ?? 'Dashboard'">
+                    @yield('navbar-actions')
+                </x-admin.navbar>
             @else
                 <x-teacher.navbar :title="$title ?? 'Dashboard'">
-                    @stack('navbar-actions')
+                    @yield('navbar-actions')
                 </x-teacher.navbar>
             @endif
             <main class="flex-1 overflow-y-auto p-6">
