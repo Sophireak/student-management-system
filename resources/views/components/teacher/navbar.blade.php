@@ -1,10 +1,17 @@
 @props(['title' => 'Dashboard'])
-<header class="h-16 bg-white border-b border-gray-200 flex items-center
-               justify-between px-4 md:px-6 flex-shrink-0">
+<header class="h-16 flex items-center justify-between px-4 md:px-6 flex-shrink-0
+               sticky top-0 z-20
+               m-3 md:mb-3 md:mt-3 md:mx-3
+               rounded-2xl
+               bg-white/60 backdrop-blur-xl backdrop-saturate-150
+               border border-white/50
+               shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_8px_24px_rgba(15,23,42,0.06)]">
     <div class="flex items-center gap-4">
         {{-- Mobile only hamburger (desktop uses sidebar's own toggle) --}}
         <button
-            class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none p-2 rounded-xl
+                   bg-white/50 hover:bg-white/80 border border-white/60 backdrop-blur-sm
+                   transition-all active:scale-95"
             onclick="toggleSidebar()"
             aria-label="Toggle sidebar"
         >
@@ -13,7 +20,7 @@
         {{-- School name + page title --}}
         <div class="flex flex-col">
             <span class="text-sm font-bold text-gray-800 leading-tight">{{ config('app.school_name') }}</span>
-            <span class="text-xs text-gray-400 leading-tight">{{ $title }}</span>
+            <span class="text-xs text-gray-500 leading-tight">{{ $title }}</span>
         </div>
     </div>
     {{-- Right side --}}
@@ -22,14 +29,19 @@
             <button
                 @click="open = !open"
                 class="flex items-center gap-2 text-sm text-gray-700
-                       hover:text-gray-900 focus:outline-none"
+                       hover:text-gray-900 focus:outline-none
+                       pl-2 pr-1 py-1 rounded-full
+                       bg-white/50 hover:bg-white/80 border border-white/60 backdrop-blur-sm
+                       transition-all active:scale-95"
             >
                 <span class="hidden sm:inline font-medium">
                     {{ auth()->user()->name }}
                 </span>
                 <span class="inline-flex items-center justify-center w-8 h-8
-                             rounded-full bg-gray-200 text-gray-600
-                             font-bold text-sm">
+                             rounded-full text-white
+                             font-bold text-sm
+                             bg-gradient-to-br from-green-500 to-green-700
+                             shadow-[0_2px_6px_rgba(22,163,74,0.35)]">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </span>
             </button>
@@ -38,22 +50,27 @@
                 x-cloak
                 @click.outside="open = false"
                 x-transition
-                class="absolute right-0 mt-2 w-44 bg-white border
-                       border-gray-200 rounded-md shadow-lg z-50"
+                class="absolute right-0 mt-2 w-48
+                       bg-white/70 backdrop-blur-xl backdrop-saturate-150
+                       border border-white/60
+                       rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.15)] z-50
+                       overflow-hidden"
             >
-                <div class="px-4 py-2 border-b border-gray-100">
-                    <p class="text-xs font-semibold text-gray-700">
+                <div class="px-4 py-3 border-b border-white/50">
+                    <p class="text-xs font-semibold text-gray-800">
                         {{ auth()->user()->name }}
                     </p>
-                    <p class="text-xs text-gray-400">Teacher</p>
+                    <p class="text-xs text-gray-500">Teacher</p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button
                         type="submit"
-                        class="w-full text-left px-4 py-2 text-sm
-                               text-red-600 hover:bg-gray-50"
+                        class="w-full text-left px-4 py-2.5 text-sm
+                               text-red-600 hover:bg-red-50/60 transition-colors
+                               flex items-center gap-2"
                     >
+                        <i class="ti ti-logout text-base"></i>
                         Log out
                     </button>
                 </form>
