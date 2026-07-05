@@ -8,7 +8,7 @@
                shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_8px_24px_rgba(15,23,42,0.06)]
                transition-colors">
     <div class="flex items-center gap-4">
-        {{-- Mobile only hamburger (desktop uses sidebar's own toggle) --}}
+        {{-- Mobile hamburger --}}
         <button
             class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none p-2 rounded-xl
                    bg-white/40 hover:bg-white/70 border border-white/60 backdrop-blur-sm
@@ -18,7 +18,8 @@
         >
             <i class="ti ti-menu-2 text-xl"></i>
         </button>
-        {{-- School name + page title --}}
+
+        {{-- Page title + breadcrumb --}}
         <div class="flex flex-col">
             <span class="text-sm font-bold text-gray-800 leading-tight">{{ config('app.school_name') }}</span>
             <span class="text-xs text-gray-500 leading-tight">{{ $title }}</span>
@@ -46,6 +47,7 @@
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </span>
             </button>
+
             <div
                 x-show="open"
                 x-cloak

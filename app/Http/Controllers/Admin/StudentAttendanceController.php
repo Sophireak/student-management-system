@@ -3,65 +3,71 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class StudentAttendanceController extends Controller
 {
-    public function index(): View
+    private function authorizeClass(int $classId): void
     {
-        $classes = SchoolClass::with(['grade', 'academicYear'])
+        // Admin can access any class
+        // No restriction needed
+    }
+
+    private function getAvailableClasses()
+    {
+        // Admin sees all active classes
+        return SchoolClass::with(['grade', 'academicYear'])
             ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
             ->orderBy('grade_id')
             ->orderBy('name')
             ->get();
-
-        return view('student-attendance.index', compact('classes'));
     }
 
-    public function sheet(Request $request): View
+    public function index(Request $request): View
     {
+        $classes = $this->getAvailableClasses();
+
+        if (! $request->filled('class_id')) {
+            return view('admin.attendance-sessions.index', compact('classes'));
+        }
+
         $request->validate([
             'class_id' => ['required', 'exists:classes,id'],
             'month'    => ['required', 'integer', 'min:1', 'max:12'],
             'year'     => ['required', 'integer'],
         ]);
 
-        $class  = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
-        $month  = (int) $request->month;
-        $year   = (int) $request->year;
+        $this->authorizeClass($request->class_id);
 
-        // Build all dates in this month
-        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
-        $dates = collect(range(1, $daysInMonth))->map(fn($d) =>
-            Carbon::create($year, $month, $d)
-        );
+        $class = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
+        $month = (int) $request->month;
+        $year  = (int) $request->year;
 
-        // Active enrollments with student phone
+        $dates = collect(range(1, Carbon::create($year, $month)->daysInMonth))
+            ->map(fn($d) => Carbon::create($year, $month, $d));
+
         $enrollments = Enrollment::with('student')
             ->where('class_id', $class->id)
             ->where('status', 'active')
             ->orderBy('id')
             ->get();
 
-        // Load all attendance sessions for this class+month
         $sessions = AttendanceSession::where('class_id', $class->id)
             ->whereYear('session_date', $year)
             ->whereMonth('session_date', $month)
-            ->pluck('id', 'session_date') // date => session_id
+            ->pluck('id', 'session_date')
             ->mapWithKeys(fn($id, $date) => [
                 Carbon::parse($date)->format('Y-m-d') => $id
             ]);
 
-        // Load all attendance records for these sessions
         $attendanceMap = [];
         if ($sessions->isNotEmpty()) {
             $records = Attendance::whereIn('attendance_session_id', $sessions->values())
@@ -69,7 +75,6 @@ class StudentAttendanceController extends Controller
                 ->get();
 
             foreach ($records as $record) {
-                // Find date for this session
                 $date = $sessions->search($record->attendance_session_id);
                 if ($date) {
                     $attendanceMap[$record->enrollment_id][$date] = $record->status;
@@ -77,66 +82,59 @@ class StudentAttendanceController extends Controller
             }
         }
 
-        $classes = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
-            ->orderBy('grade_id')->orderBy('name')->get();
-
-        return view('student-attendance.sheet', compact(
-            'class', 'month', 'year', 'dates',
-            'enrollments', 'attendanceMap', 'sessions', 'classes'
+        return view('admin.attendance-sessions.index', compact(
+            'classes', 'class', 'month', 'year',
+            'dates', 'enrollments', 'attendanceMap', 'sessions'
         ));
     }
 
-    public function save(Request $request): RedirectResponse
+    public function sheet(Request $request): RedirectResponse
+    {
+        return redirect()->route('admin.student-attendance.index', $request->only([
+            'class_id', 'month', 'year'
+        ]));
+    }
+
+    public function saveSingle(Request $request): JsonResponse
     {
         $request->validate([
-            'class_id'   => ['required', 'exists:classes,id'],
-            'month'      => ['required', 'integer', 'min:1', 'max:12'],
-            'year'       => ['required', 'integer'],
-            'attendance' => ['required', 'array'],
+            'class_id'      => ['required', 'exists:classes,id'],
+            'date'          => ['required', 'date_format:Y-m-d'],
+            'enrollment_id' => ['required', 'exists:enrollments,id'],
+            'status'        => ['nullable', 'in:present,absent,late,excused'],
+            'note'          => ['nullable', 'string', 'max:255'],
         ]);
 
-        $classId = $request->class_id;
-        $month   = (int) $request->month;
-        $year    = (int) $request->year;
+        $this->authorizeClass($request->class_id);
 
-        $validEnrollmentIds = Enrollment::where('class_id', $classId)
+        $enrollment = Enrollment::where('id', $request->enrollment_id)
+            ->where('class_id', $request->class_id)
             ->where('status', 'active')
-            ->pluck('id')
-            ->flip();
+            ->firstOrFail();
 
-        DB::transaction(function () use ($request, $classId, $month, $year, $validEnrollmentIds) {
-            // attendance[YYYY-MM-DD][enrollment_id] = status
-            foreach ($request->attendance as $date => $enrollmentStatuses) {
-                // Validate date belongs to this month/year
-                $carbonDate = Carbon::createFromFormat('Y-m-d', $date);
-                if ($carbonDate->month !== $month || $carbonDate->year !== $year) continue;
+        $session = AttendanceSession::firstOrCreate(
+            ['class_id' => $request->class_id, 'session_date' => $request->date],
+            ['subject_id' => null, 'period' => null, 'topic' => null]
+        );
 
-                // Get or create the session for this date
-                $session = AttendanceSession::firstOrCreate(
-                    ['class_id' => $classId, 'session_date' => $date],
-                    ['subject_id' => null, 'period' => null, 'topic' => null]
-                );
+        if (empty($request->status)) {
+            Attendance::where([
+                'enrollment_id'         => $enrollment->id,
+                'attendance_session_id' => $session->id,
+            ])->delete();
+        } else {
+            Attendance::updateOrCreate(
+                [
+                    'enrollment_id'         => $enrollment->id,
+                    'attendance_session_id' => $session->id,
+                ],
+                [
+                    'status' => $request->status,
+                    'notes'  => $request->note,
+                ]
+            );
+        }
 
-                foreach ($enrollmentStatuses as $enrollmentId => $status) {
-                    if (! isset($validEnrollmentIds[$enrollmentId])) continue;
-                    if (! in_array($status, ['present', 'absent', 'late', 'excused'])) continue;
-
-                    Attendance::updateOrCreate(
-                        [
-                            'enrollment_id'         => $enrollmentId,
-                            'attendance_session_id' => $session->id,
-                        ],
-                        ['status' => $status]
-                    );
-                }
-            }
-        });
-
-        return redirect()->route('admin.student-attendance.sheet', [
-            'class_id' => $classId,
-            'month'    => $month,
-            'year'     => $year,
-        ])->with('success', 'Attendance saved successfully.');
+        return response()->json(['success' => true]);
     }
 }
