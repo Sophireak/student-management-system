@@ -4,13 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <title>{{ config('app.name') }} – {{ $title ?? 'Dashboard' }}</title>
+    <title>{{ config('app.name') }} ï¿½ {{ $title ?? 'Dashboard' }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    {{-- Prevent sidebar transition flicker on page load --}}
     <style>
         #sidebar { transition: none !important; }
         [x-cloak] { display: none !important; }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Re-enable transitions after first paint --}}
     <script>
         window.addEventListener('load', () => {
             requestAnimationFrame(() => {
@@ -22,7 +24,11 @@
         });
     </script>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="bg-gray-50 font-sans antialiased relative">
+    @unless (auth()->user()->isAdmin())
+        {{-- Khmer-toned ambient background (global for all teacher pages) --}}
+        <div class="fixed inset-0 -z-10 bg-gradient-to-br from-green-50 via-amber-50/40 to-yellow-50 pointer-events-none"></div>
+    @endunless
     <div class="flex h-screen overflow-hidden">
         @if (auth()->user()->isAdmin())
             <x-admin.sidebar />

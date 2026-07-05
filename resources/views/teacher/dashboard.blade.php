@@ -2,9 +2,6 @@
 
 @section('content')
 
-{{-- Khmer-toned ambient background --}}
-<div class="fixed inset-0 -z-10 bg-gradient-to-br from-green-50 via-amber-50/40 to-yellow-50 pointer-events-none"></div>
-
 {{-- Page Header --}}
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-800">Welcome back, {{ auth()->user()->name }}</h1>
@@ -104,4 +101,6 @@
         </div>
     @endif
 </div>
+
+<!-- ÷ -->
 @endsection
