@@ -1,15 +1,31 @@
-@props(['route', 'icon', 'label'])
+@props(['route', 'icon', 'label', 'matches' => null])
 
 @php
-    $isActive = request()->routeIs($route . '*');
+    if ($matches) {
+        $isActive = collect($matches)->contains(fn($r) => request()->routeIs($r . '*'));
+    } else {
+        $isActive = request()->routeIs($route . '*');
+    }
 @endphp
 
 <a href="{{ route($route) }}"
-   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors
-          {{ $isActive
-              ? 'bg-green-50 text-green-700'
-              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800' }}"
+   @class([
+       'flex flex-col items-center justify-center gap-0.5 
+        py-1 px-2 rounded-xl transition-colors min-w-[3.5rem]',
+       'text-green-600' => $isActive,
+       'text-gray-400 hover:text-gray-600' => !$isActive,
+   ])
 >
-    <i class="{{ $icon }} text-base {{ $isActive ? 'text-green-600' : 'text-gray-400' }}"></i>
-    <span class="sidebar-label">{{ $label }}</span>
+    <i @class([
+        $icon, 'text-xl',
+        'text-green-600' => $isActive,
+        'text-gray-400' => !$isActive,
+    ])></i>
+    <span @class([
+        'text-[10px] font-medium leading-tight',
+        'text-green-600' => $isActive,
+        'text-gray-400' => !$isActive,
+    ])>
+        {{ $label }}
+    </span>
 </a>

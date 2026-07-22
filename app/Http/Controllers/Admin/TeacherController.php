@@ -64,12 +64,23 @@ class TeacherController extends Controller
             ->with('success', 'Teacher account created successfully.');
     }
 
-    public function show(Teacher $teacher): View
-    {
-        $teacher->load('user', 'classes.academicYear', 'classes.grade');
+   public function show(Teacher $teacher): View
+{
+    $teacher->load([
+        'user',
+        'classes.academicYear',
+        'classes.grade',
+    ]);
 
-        return view('admin.teachers.show', compact('teacher'));
-    }
+    $teacher->classes->each(function ($class) {
+        $class->loadCount([
+            'enrollments as enrollments_count' => fn($q) =>
+                $q->where('status', 'active')
+        ]);
+    });
+
+    return view('admin.teachers.show', compact('teacher'));
+}
 
     public function edit(Teacher $teacher): View
     {

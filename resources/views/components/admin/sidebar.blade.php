@@ -1,89 +1,156 @@
 <aside
     id="sidebar"
-    class="w-60 bg-white text-gray-700 flex flex-col flex-shrink-0 border-r border-gray-200
-           fixed inset-y-0 left-0 z-40 transform -translate-x-full
-           transition-transform duration-200 ease-in-out
-           md:relative md:translate-x-0"
+    class="hidden md:flex w-60 bg-gradient-to-b from-green-700 to-green-800 
+           flex-col flex-shrink-0
+           relative inset-y-0 left-0 z-40 
+           transition-all duration-300 ease-in-out
+           overflow-x-hidden"
 >
-    {{-- Logo + desktop collapse button --}}
-    <div id="sidebar-logo-area" class="h-16 flex items-center justify-between border-b border-gray-100 px-4">
+    {{-- Logo Area --}}
+    <div id="sidebar-logo-area" 
+         class="h-16 flex items-center justify-between 
+                border-b border-green-600/50 px-4">
 
-        {{-- Brand (hidden when collapsed) --}}
         <div class="flex items-center gap-2.5 sidebar-label">
             <span class="text-2xl leading-none">🎓</span>
             <div class="flex flex-col leading-tight">
-                <span class="text-sm font-extrabold text-gray-800 tracking-tight">{{ config('app.name') }}</span>
-                <span class="text-[10px] font-medium text-green-600 uppercase tracking-widest">School Portal</span>
+                <span class="text-sm font-extrabold text-white 
+                             tracking-tight">
+                    {{ config('app.name') }}
+                </span>
+                <span class="text-[10px] font-medium text-green-200 
+                             uppercase tracking-widest">
+                    School Portal
+                </span>
             </div>
         </div>
 
-        {{-- Toggle button (always visible, desktop only) --}}
         <button
             id="sidebar-toggle-btn"
-            class="hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            class="hidden md:flex items-center justify-center 
+                   w-8 h-8 rounded-lg text-green-200 
+                   hover:text-white hover:bg-white/10 
+                   transition-colors"
             onclick="toggleSidebar()"
             aria-label="Collapse sidebar"
         >
-            <i id="sidebar-toggle-icon" class="ti ti-layout-sidebar-left-collapse text-lg"></i>
+            <i id="sidebar-toggle-icon" 
+               class="ti ti-layout-sidebar-left-collapse text-lg"></i>
         </button>
     </div>
 
     {{-- Navigation --}}
-    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+    <nav class="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-0.5">
 
         {{-- Dashboard --}}
-        <x-admin.nav-item route="admin.dashboard" icon="ti ti-layout-dashboard" label="Dashboard" />
+        <x-admin.nav-item 
+            route="admin.dashboard" 
+            icon="ti ti-layout-dashboard" 
+            label="Dashboard" />
 
         {{-- Daily Tasks --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Daily Tasks</div>
-        <x-admin.nav-item route="admin.student-attendance.index" icon="ti ti-calendar-check" label="Take Attendance" />
-        <x-admin.nav-item route="admin.examination-scores.index" icon="ti ti-pencil"          label="Enter Scores" />
+        <div class="sidebar-section">Daily Tasks</div>
+        <x-admin.nav-item 
+            route="admin.student-attendance.index" 
+            icon="ti ti-calendar-check" 
+            label="Take Attendance" />
+        <x-admin.nav-item 
+            route="admin.scores.index" 
+            icon="ti ti-pencil" 
+            label="Enter Scores" />
 
         {{-- Management --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Management</div>
-        <x-admin.nav-item route="admin.students.index" icon="ti ti-users"  label="Students" />
-        <x-admin.nav-item route="admin.teachers.index" icon="ti ti-school" label="Teachers" />
+        <div class="sidebar-section">Management</div>
+        <x-admin.nav-item 
+            route="admin.students.index" 
+            icon="ti ti-users" 
+            label="Students" />
+        <x-admin.nav-item 
+            route="admin.teachers.index" 
+            icon="ti ti-school" 
+            label="Teachers" />
 
-        {{-- Reports (collapsible) --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Reports</div>
+        {{-- Reports --}}
+        <div class="sidebar-section">Reports</div>
         <x-admin.nav-group
             icon="ti ti-chart-bar"
             label="Reports"
-            :routes="['admin.monthly-report', 'admin.semester-report', 'admin.annual-report', 'admin.reports.ranking', 'admin.reports.honors']"
+            :routes="[
+                'admin.monthly-report',
+                'admin.semester-report',
+                'admin.annual-report',
+                'admin.reports.ranking',
+                'admin.reports.honors'
+            ]"
         >
-            <x-admin.nav-item route="admin.monthly-report.index"  icon="ti ti-calendar-stats" label="Monthly Report" />
-            <x-admin.nav-item route="admin.semester-report.index" icon="ti ti-calendar-due"   label="Semester Report" />
-            <x-admin.nav-item route="admin.annual-report.index"   icon="ti ti-calendar-event" label="Annual Report" />
-            <x-admin.nav-item route="admin.reports.ranking.index" icon="ti ti-medal"          label="Ranking" />
-            <x-admin.nav-item route="admin.reports.honors.index"  icon="ti ti-trophy"         label="Honors" />
+            <x-admin.nav-item 
+                route="admin.monthly-report.index" 
+                icon="ti ti-calendar-stats" 
+                label="Monthly Report" />
+            <x-admin.nav-item 
+                route="admin.semester-report.index" 
+                icon="ti ti-calendar-due" 
+                label="Semester Report" />
+            <x-admin.nav-item 
+                route="admin.annual-report.index" 
+                icon="ti ti-calendar-event" 
+                label="Annual Report" />
+            <x-admin.nav-item 
+                route="admin.reports.ranking.index" 
+                icon="ti ti-medal" 
+                label="Ranking" />
+            <x-admin.nav-item 
+                route="admin.reports.honors.index" 
+                icon="ti ti-trophy" 
+                label="Honors" />
         </x-admin.nav-group>
 
-        {{-- Academic Setup (collapsible) --}}
-        <div class="pt-4 pb-1 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sidebar-label">Academic Setup</div>
+        {{-- Academic Setup --}}
+        <div class="sidebar-section">Academic Setup</div>
         <x-admin.nav-group
             icon="ti ti-settings-2"
             label="Academic Setup"
-            :routes="['admin.classes', 'admin.subjects', 'admin.grades', 'admin.academic-years', 'admin.enrollments']"
+            :routes="[
+                'admin.academic-years',
+                'admin.classes',
+                'admin.subjects',
+                'admin.grades',
+                'admin.enrollments'
+            ]"
         >
-            <x-admin.nav-item route="admin.classes.index"        icon="ti ti-building"       label="Classes" />
-            <x-admin.nav-item route="admin.subjects.index"       icon="ti ti-book"           label="Subjects" />
-            <x-admin.nav-item route="admin.grades.index"         icon="ti ti-award"          label="Grades" />
-            <x-admin.nav-item route="admin.academic-years.index" icon="ti ti-calendar"       label="Academic Years" />
-            <x-admin.nav-item route="admin.enrollments.index"    icon="ti ti-clipboard-list" label="Enrollments" />
+            <x-admin.nav-item 
+                route="admin.academic-years.index" 
+                icon="ti ti-calendar" 
+                label="Academic Years" />
+            <x-admin.nav-item 
+                route="admin.classes.index" 
+                icon="ti ti-building" 
+                label="Classes" />
+            <x-admin.nav-item 
+                route="admin.subjects.index" 
+                icon="ti ti-book" 
+                label="Subjects" />
+            <x-admin.nav-item 
+                route="admin.grades.index" 
+                icon="ti ti-award" 
+                label="Grades" />
+            <x-admin.nav-item 
+                route="admin.enrollments.index" 
+                icon="ti ti-clipboard-list" 
+                label="Enrollments" />
         </x-admin.nav-group>
 
     </nav>
 
-    {{-- Footer --}}
-    <div class="border-t border-gray-100 px-5 py-3 sidebar-label">
-        <p class="text-xs text-gray-400">Logged in as</p>
-        <p class="text-sm font-semibold text-gray-700">{{ auth()->user()->name }}</p>
+    {{-- Sidebar Footer --}}
+<div class="border-t border-green-600/50 px-3 py-4 sidebar-label">
+    <div class="text-center">
+        <p class="text-[10px] font-bold text-green-200/60 uppercase tracking-wider">
+            KruDesk
+        </p>
+        <p class="text-[10px] text-green-200/40 mt-0.5">
+            School Portal · v1.0
+        </p>
     </div>
+</div>
 </aside>
-
-{{-- Mobile overlay --}}
-<div
-    id="sidebar-overlay"
-    class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"
-    onclick="toggleSidebar()"
-></div>

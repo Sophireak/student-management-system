@@ -1,4 +1,4 @@
-@extends('layouts.admin', ['title' => 'Annual Report'])
+@extends('layouts.teacher', ['title' => 'Annual Report'])
 
 @section('content')
 

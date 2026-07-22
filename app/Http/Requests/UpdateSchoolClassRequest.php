@@ -32,6 +32,7 @@ class UpdateSchoolClassRequest extends FormRequest
                     ->ignore($id),
             ],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'session_period' => ['required', 'in:morning,afternoon'],
         ];
     }
 

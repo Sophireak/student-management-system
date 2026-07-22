@@ -19,6 +19,7 @@ class SchoolClass extends Model
         'grade_id',
         'name',
         'capacity',
+        'session_period',
     ];
 
     // Class belongs to an academic year
