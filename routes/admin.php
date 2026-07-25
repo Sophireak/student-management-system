@@ -13,11 +13,11 @@ use App\Http\Controllers\Admin\ClassTeacherController;
 use App\Http\Controllers\Admin\AttendanceSessionController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\StudentAttendanceController;
-use App\Http\Controllers\Admin\ExaminationScoreController;
 use App\Http\Controllers\Admin\MonthlyReportController;
 use App\Http\Controllers\Admin\SemesterReportController;
 use App\Http\Controllers\Admin\AnnualReportController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ScoreController;
 
 Route::middleware(['auth', 'verified', 'admin'])
     ->prefix('admin')
@@ -33,12 +33,14 @@ Route::middleware(['auth', 'verified', 'admin'])
             ->name('academic-years.activate');
         Route::resource('grades',   GradeController::class);
         Route::resource('subjects', SubjectController::class);
+        Route::post('subjects/template', [SubjectController::class, 'storeTemplate'])
+            ->name('subjects.template');
 
         // ── People ────────────────────────────────────────────────
         Route::resource('teachers', TeacherController::class);
 
-        Route::get('students/archived',          [StudentController::class, 'archived'])->name('students.archived');
-        Route::post('students/{id}/restore',     [StudentController::class, 'restore'])->name('students.restore');
+        Route::get('students/archived',             [StudentController::class, 'archived'])->name('students.archived');
+        Route::post('students/{id}/restore',        [StudentController::class, 'restore'])->name('students.restore');
         Route::delete('students/{id}/force-delete', [StudentController::class, 'forceDelete'])->name('students.force-delete');
         Route::resource('students', StudentController::class);
 
@@ -54,29 +56,27 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // ── Enrollments ───────────────────────────────────────────
         Route::resource('enrollments', EnrollmentController::class);
-        Route::patch('enrollments/{enrollment}/status', [EnrollmentController::class, 'updateStatus'])
-            ->name('enrollments.updateStatus');
+        Route::patch('enrollments/{enrollment}/status',  [EnrollmentController::class, 'updateStatus'])->name('enrollments.updateStatus');
         Route::post('enrollments/{enrollment}/transfer', [EnrollmentController::class, 'transfer'])->name('enrollments.transfer');
         Route::post('enrollments/{enrollment}/promote',  [EnrollmentController::class, 'promote'])->name('enrollments.promote');
 
         // ── Student Attendance ────────────────────────────────────
-        Route::prefix('student-attendance')->name('student-attendance.')->group(function () {
+        Route::prefix('attendance')->name('student-attendance.')->group(function () {
             Route::get('/',      [StudentAttendanceController::class, 'index'])->name('index');
-            Route::get('/sheet', [StudentAttendanceController::class, 'sheet'])->name('sheet');
             Route::post('/save', [StudentAttendanceController::class, 'save'])->name('save');
         });
 
-        // ── Examination Scores ────────────────────────────────────
-        Route::prefix('examination-scores')->name('examination-scores.')->group(function () {
-            Route::get('/',               [ExaminationScoreController::class, 'index'])->name('index');
-            Route::get('/sheet',          [ExaminationScoreController::class, 'sheet'])->name('sheet');
-            Route::post('/save-monthly',  [ExaminationScoreController::class, 'saveMonthly'])->name('save-monthly');
-            Route::post('/save-semester', [ExaminationScoreController::class, 'saveSemester'])->name('save-semester');
-            Route::post('/lock',          [ExaminationScoreController::class, 'lock'])->name('lock');
-            Route::post('/unlock',        [ExaminationScoreController::class, 'unlock'])->name('unlock');
+        // ── Scores (consolidated) ─────────────────────────────────
+        Route::prefix('scores')->name('scores.')->group(function () {
+            Route::get('/',        [ScoreController::class, 'index'])->name('index');
+            Route::get('/input',   [ScoreController::class, 'input'])->name('input');
+            Route::post('/save',   [ScoreController::class, 'save'])->name('save');
+            Route::post('/lock',   [ScoreController::class, 'lock'])->name('lock');
+            Route::post('/unlock', [ScoreController::class, 'unlock'])->name('unlock');
+            Route::get('/report',  [ScoreController::class, 'report'])->name('report');
         });
 
-        // ── Score Entry (Monthly / Semester / Annual) ─────────────
+        // ── Reports (Monthly / Semester / Annual) ─────────────────
         Route::prefix('monthly-report')->name('monthly-report.')->group(function () {
             Route::get('/',        [MonthlyReportController::class, 'index'])->name('index');
             Route::get('/sheet',   [MonthlyReportController::class, 'show'])->name('show');
@@ -84,6 +84,7 @@ Route::middleware(['auth', 'verified', 'admin'])
             Route::post('/lock',   [MonthlyReportController::class, 'lock'])->name('lock');
             Route::post('/unlock', [MonthlyReportController::class, 'unlock'])->name('unlock');
         });
+
         Route::prefix('semester-report')->name('semester-report.')->group(function () {
             Route::get('/',           [SemesterReportController::class, 'index'])->name('index');
             Route::get('/sheet',      [SemesterReportController::class, 'show'])->name('show');
@@ -92,6 +93,7 @@ Route::middleware(['auth', 'verified', 'admin'])
             Route::post('/lock',      [SemesterReportController::class, 'lock'])->name('lock');
             Route::post('/unlock',    [SemesterReportController::class, 'unlock'])->name('unlock');
         });
+
         Route::prefix('annual-report')->name('annual-report.')->group(function () {
             Route::get('/',           [AnnualReportController::class, 'index'])->name('index');
             Route::get('/sheet',      [AnnualReportController::class, 'show'])->name('show');
@@ -101,11 +103,17 @@ Route::middleware(['auth', 'verified', 'admin'])
             Route::post('/unlock',    [AnnualReportController::class, 'unlock'])->name('unlock');
         });
 
-        // ── Reports ───────────────────────────────────────────────
+        // ── Reports (Ranking / Honors) ────────────────────────────
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/ranking',       [ReportController::class, 'rankingIndex'])->name('ranking.index');
             Route::get('/ranking/sheet', [ReportController::class, 'rankingSheet'])->name('ranking.sheet');
             Route::get('/honors',        [ReportController::class, 'honorsIndex'])->name('honors.index');
             Route::get('/honors/sheet',  [ReportController::class, 'honorsSheet'])->name('honors.sheet');
         });
+
+        // ── User QR Code ──────────────────────────────────────────
+        Route::post('users/{user}/regenerate-qr', function (\App\Models\User $user) {
+            $user->generateLoginToken();
+            return back()->with('success', 'QR Code បានផ្លាស់ប្តូរដោយជោគជ័យ។');
+        })->name('users.regenerate-qr');
     });

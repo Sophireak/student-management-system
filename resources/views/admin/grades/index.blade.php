@@ -2,115 +2,172 @@
 
 @section('content')
 
-{{-- Page Header --}}
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-800">Grades</h1>
-        <p class="text-sm text-gray-500 mt-1">Manage all grade levels</p>
-    </div>
-    <a href="{{ route('admin.grades.create') }}"
-       class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
-        <i class="ti ti-plus text-base"></i> New Grade
-    </a>
-</div>
+{{-- ========================================
+     TOOLBAR
+     ======================================== --}}
+<x-admin.page-toolbar>
+    <x-slot:left>
+        <x-admin.toolbar-meta 
+            icon="ti-award"
+            label="Total Grades"
+            value="{{ $grades->total() }} grade levels"
+            color="indigo" />
+    </x-slot:left>
 
-{{-- Alerts --}}
-@if (session('success'))
-    <div class="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
-        <i class="ti ti-circle-check text-base"></i> {{ session('success') }}
-    </div>
-@endif
-@if (session('error'))
-    <div class="mb-4 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-        <i class="ti ti-alert-circle text-base"></i> {{ session('error') }}
-    </div>
-@endif
+    <x-slot:right>
+        <x-admin.toolbar-button 
+            href="{{ route('admin.grades.create') }}"
+            icon="ti-plus"
+            label="Add Grade"
+            variant="primary" />
+    </x-slot:right>
+</x-admin.page-toolbar>
 
-{{-- Search & Filter --}}
-<div class="bg-white rounded-xl border border-gray-200 p-4 mb-5">
-    <form method="GET" action="" class="flex flex-wrap gap-3 items-end">
-        <div class="relative flex-1 min-w-56">
-            <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
-            <input type="text" name="search" value="{{ $search ?? '' }}"
-                   placeholder="Search by name or level..."
-                   class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-        </div>
-        <button type="submit"
-                class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
-            <i class="ti ti-search text-base"></i> Search
-        </button>
-        @if ($search ?? false)
-            <a href="{{ route('admin.grades.index') }}"
-               class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-lg transition-colors">
-                <i class="ti ti-x text-base"></i> Clear
-            </a>
-        @endif
-    </form>
-</div>
+{{-- ========================================
+     SEARCH
+     ======================================== --}}
+<x-admin.toolbar-search 
+    :action="route('admin.grades.index')"
+    placeholder="Search by name or level..."
+    :value="$search ?? ''" />
 
-{{-- Table --}}
-<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-100 text-sm">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Level</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Classes</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-            @forelse ($grades as $grade)
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 font-mono text-xs text-gray-400">{{ $grade->level }}</td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                <i class="ti ti-school text-green-600 text-sm"></i>
+{{-- ========================================
+     TABLE
+     ======================================== --}}
+<div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-4">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-200">
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                        Grade
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap hidden sm:table-cell">
+                        Level
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                        Classes
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap hidden md:table-cell">
+                        Subjects
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap text-right">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100/80">
+                @forelse ($grades as $grade)
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+
+                        {{-- Grade Name --}}
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 
+                                            text-indigo-700 flex items-center justify-center font-extrabold 
+                                            shadow-inner flex-shrink-0 text-sm">
+                                    {{ $grade->level }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800">
+                                        {{ $grade->name }}
+                                    </p>
+                                    <p class="text-[11px] text-gray-400 mt-0.5 sm:hidden">
+                                        Level {{ $grade->level }}
+                                    </p>
+                                </div>
                             </div>
-                            <span class="font-medium text-gray-800">{{ $grade->name }}</span>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3 text-gray-500">
-                        {{ $grade->classes_count ?? $grade->schoolClasses()->count() }} class(es)
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-1">
-                            <a href="{{ route('admin.grades.edit', $grade) }}"
-                               class="p-1.5 rounded-lg bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition-colors"
-                               title="Edit">
-                                <i class="ti ti-pencil text-sm"></i>
-                            </a>
-                            <form method="POST" action="{{ route('admin.grades.destroy', $grade) }}"
-                                  onsubmit="return confirm('Delete {{ $grade->name }}? This cannot be undone.')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                        class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
-                                        title="Delete">
-                                    <i class="ti ti-trash text-sm"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4" class="px-4 py-12 text-center">
-                        <i class="ti ti-school-off text-4xl text-gray-300 block mb-2"></i>
-                        <p class="text-gray-400 text-sm">No grades found.</p>
-                        <a href="{{ route('admin.grades.create') }}"
-                           class="mt-3 inline-flex items-center gap-1 text-sm text-green-600 hover:underline">
-                            <i class="ti ti-plus"></i> Add first grade
-                        </a>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                        </td>
+
+                        {{-- Level Badge --}}
+                        <td class="px-5 py-4 hidden sm:table-cell">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs 
+                                         font-mono font-semibold bg-gray-50 text-gray-600 border border-gray-200">
+                                <i class="ti ti-sort-ascending-numbers text-gray-400"></i>
+                                Level {{ $grade->level }}
+                            </span>
+                        </td>
+
+                        {{-- Classes Count --}}
+                        <td class="px-5 py-4">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs 
+                                         font-semibold bg-purple-50 text-purple-600 border border-purple-100">
+                                <i class="ti ti-building text-purple-400"></i>
+                                {{ $grade->classes_count }} {{ Str::plural('class', $grade->classes_count) }}
+                            </span>
+                        </td>
+
+                        {{-- Subjects Count --}}
+                        <td class="px-5 py-4 hidden md:table-cell">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs 
+                                         font-semibold bg-blue-50 text-blue-600 border border-blue-100">
+                                <i class="ti ti-book text-blue-400"></i>
+                                {{ $grade->subjects_count }} {{ Str::plural('subject', $grade->subjects_count) }}
+                            </span>
+                        </td>
+
+                        {{-- Actions --}}
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.grades.edit', $grade) }}"
+                                   class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-gray-50
+                                          hover:bg-amber-50 hover:text-amber-600 transition-all border border-gray-100 hover:border-amber-100"
+                                   title="Edit Grade">
+                                    <i class="ti ti-pencil text-lg"></i>
+                                </a>
+                                <form method="POST" action="{{ route('admin.grades.destroy', $grade) }}"
+                                      onsubmit="return confirm('Are you sure you want to delete {{ $grade->name }}? This cannot be undone.')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit"
+                                            class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-gray-50
+                                                   hover:bg-red-50 hover:text-red-600 transition-all border border-gray-100 hover:border-red-100"
+                                            title="Delete Grade">
+                                        <i class="ti ti-trash text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-5 py-16 text-center">
+                            <div class="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                <i class="ti ti-award-off text-2xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-800 mb-1">No grades found</h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                @if($search)
+                                    No grades match your search "{{ $search }}".
+                                @else
+                                    Get started by creating your first grade level.
+                                @endif
+                            </p>
+                            @if($search)
+                                <a href="{{ route('admin.grades.index') }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300
+                                          rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    Clear Search
+                                </a>
+                            @else
+                                <a href="{{ route('admin.grades.create') }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700
+                                          rounded-lg text-sm font-bold hover:bg-green-100 transition-colors">
+                                    <i class="ti ti-plus"></i> Add First Grade
+                                </a>
+                            @endif
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
 {{-- Pagination --}}
-<div class="mt-4">{{ $grades->links() }}</div>
+@if($grades->hasPages())
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        {{ $grades->links() }}
+    </div>
+@endif
 
 @endsection

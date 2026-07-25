@@ -12,19 +12,36 @@ use Illuminate\View\View;
 
 class AcademicYearController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $search = $request->input('search');
+    public function index(Request $request)
+{
+    $query = AcademicYear::query();
 
-        $academicYears = AcademicYear::when($search, fn($q) =>
-                $q->where('name', 'like', "%{$search}%")
-            )
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
-
-        return view('admin.academic-years.index', compact('academicYears', 'search'));
+    // Search
+    if ($search = $request->search) {
+        $query->where('name', 'like', "%{$search}%");
     }
+
+    // Status filter
+    if ($status = $request->status) {
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+    }
+
+    $academicYears = $query->latest('start_date')->paginate(20)->withQueryString();
+
+    // Counts for tabs
+    $totalCount    = AcademicYear::count();
+    $activeCount   = AcademicYear::where('is_active', true)->count();
+    $inactiveCount = AcademicYear::where('is_active', false)->count();
+
+    return view('admin.academic-years.index', compact(
+        'academicYears', 'search', 
+        'totalCount', 'activeCount', 'inactiveCount'
+    ));
+}
 
     public function create(): View
     {

@@ -16,127 +16,250 @@ use Illuminate\View\View;
 
 class StudentAttendanceController extends Controller
 {
-    public function index(): View
-    {
-        $classes = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
-            ->orderBy('grade_id')
-            ->orderBy('name')
-            ->get();
+public function index(Request $request): View
+{
+    $classId = $request->input('class_id');
+    $date    = $request->input('date', now()->format('Y-m-d'));
 
-        return view('student-attendance.index', compact('classes'));
+    // All active classes for dropdown
+    $classes = SchoolClass::with(['grade', 'academicYear'])
+        ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
+        ->orderBy('grade_id')->orderBy('name')->get();
+
+    // Empty state
+    if (!$classId) {
+        return view('admin.student-attendance.index', [
+            'classes'       => $classes,
+            'class'         => null,
+            'date'          => $date,
+            'period'        => 'morning',
+            'enrollments'   => collect(),
+            'attendanceMap' => [],
+            'total'         => 0,
+            'presentCount'  => 0,
+            'absentCount'   => 0,
+            'lateCount'     => 0,
+            'excusedCount'  => 0,
+            'isLocked'      => false,
+            'isSunday'      => false,
+            'isPast'        => false,
+            'isFuture'      => false,
+            'khmerDate'     => $this->formatKhmerDate(Carbon::parse($date)),
+            'session'       => null,
+        ]);
     }
 
-    public function sheet(Request $request): View
-    {
-        $request->validate([
-            'class_id' => ['required', 'exists:classes,id'],
-            'month'    => ['required', 'integer', 'min:1', 'max:12'],
-            'year'     => ['required', 'integer'],
+    $class = SchoolClass::with(['grade', 'academicYear'])->findOrFail($classId);
+    $period = $class->session_period ?? 'morning'; // Use class's session
+
+    $carbonDate = Carbon::parse($date);
+    $today      = Carbon::today();
+    $isSunday   = $carbonDate->dayOfWeek === Carbon::SUNDAY;
+    $isPast     = $carbonDate->lt($today);
+    $isFuture   = $carbonDate->gt($today);
+
+    // Block future dates
+    if ($isFuture) {
+        return view('admin.student-attendance.index', [
+            'classes'       => $classes,
+            'class'         => $class,
+            'date'          => $date,
+            'period'        => $period,
+            'enrollments'   => collect(),
+            'attendanceMap' => [],
+            'total'         => 0,
+            'presentCount'  => 0,
+            'absentCount'   => 0,
+            'lateCount'     => 0,
+            'excusedCount'  => 0,
+            'isLocked'      => true,
+            'isSunday'      => false,
+            'isPast'        => false,
+            'isFuture'      => true,
+            'khmerDate'     => $this->formatKhmerDate($carbonDate),
+            'session'       => null,
         ]);
+    }
 
-        $class  = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
-        $month  = (int) $request->month;
-        $year   = (int) $request->year;
+    // Get active enrollments
+    $enrollments = Enrollment::with('student')
+        ->where('class_id', $classId)
+        ->where('status', 'active')
+        ->get()
+        ->sortBy(fn($e) => $e->student->last_name . ' ' . $e->student->first_name)
+        ->values();
 
-        // Build all dates in this month
-        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
-        $dates = collect(range(1, $daysInMonth))->map(fn($d) =>
-            Carbon::create($year, $month, $d)
+    $session = null;
+    $attendanceMap = [];
+    $isLocked = false;
+
+    if (!$isSunday && $enrollments->isNotEmpty()) {
+        $session = AttendanceSession::firstOrCreate(
+            ['class_id' => $classId, 'session_date' => $date, 'period' => $period],
+            ['subject_id' => null, 'topic' => null]
         );
 
-        // Active enrollments with student phone
-        $enrollments = Enrollment::with('student')
-            ->where('class_id', $class->id)
-            ->where('status', 'active')
-            ->orderBy('id')
-            ->get();
-
-        // Load all attendance sessions for this class+month
-        $sessions = AttendanceSession::where('class_id', $class->id)
-            ->whereYear('session_date', $year)
-            ->whereMonth('session_date', $month)
-            ->pluck('id', 'session_date') // date => session_id
-            ->mapWithKeys(fn($id, $date) => [
-                Carbon::parse($date)->format('Y-m-d') => $id
-            ]);
-
-        // Load all attendance records for these sessions
-        $attendanceMap = [];
-        if ($sessions->isNotEmpty()) {
-            $records = Attendance::whereIn('attendance_session_id', $sessions->values())
-                ->whereIn('enrollment_id', $enrollments->pluck('id'))
-                ->get();
-
-            foreach ($records as $record) {
-                // Find date for this session
-                $date = $sessions->search($record->attendance_session_id);
-                if ($date) {
-                    $attendanceMap[$record->enrollment_id][$date] = $record->status;
-                }
-            }
+        // Auto-lock past dates (for teachers only)
+        if ($isPast && !$session->isLocked() && !auth()->user()->isAdmin()) {
+            $session->autoLock();
         }
 
-        $classes = SchoolClass::with(['grade', 'academicYear'])
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
-            ->orderBy('grade_id')->orderBy('name')->get();
+        // Check lock
+        $isLocked = !$session->canEdit(auth()->user());
 
-        return view('student-attendance.sheet', compact(
-            'class', 'month', 'year', 'dates',
-            'enrollments', 'attendanceMap', 'sessions', 'classes'
-        ));
+        // Get existing attendance
+        $records = Attendance::where('attendance_session_id', $session->id)
+            ->get()
+            ->keyBy('enrollment_id');
+
+// Build map (auto-present visually, but no DB write)
+foreach ($enrollments as $enrollment) {
+    $record = $records->get($enrollment->id);
+    $attendanceMap[$enrollment->id] = [
+        'status' => $record?->status ?? 'present', // Default visual = present
+        'notes'  => $record?->notes ?? '',
+    ];
+}
+
+        // Build map
+        foreach ($enrollments as $enrollment) {
+            $record = $records->get($enrollment->id);
+            $attendanceMap[$enrollment->id] = [
+                'status' => $record?->status ?? 'present',
+                'notes'  => $record?->notes ?? '',
+            ];
+        }
     }
 
-    public function save(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'class_id'   => ['required', 'exists:classes,id'],
-            'month'      => ['required', 'integer', 'min:1', 'max:12'],
-            'year'       => ['required', 'integer'],
-            'attendance' => ['required', 'array'],
-        ]);
+    return view('admin.student-attendance.index', [
+        'classes'       => $classes,
+        'class'         => $class,
+        'date'          => $date,
+        'period'        => $period,
+        'enrollments'   => $enrollments,
+        'attendanceMap' => $attendanceMap,
+        'total'         => $enrollments->count(),
+        'presentCount'  => collect($attendanceMap)->where('status', 'present')->count(),
+        'absentCount'   => collect($attendanceMap)->where('status', 'absent')->count(),
+        'lateCount'     => collect($attendanceMap)->where('status', 'late')->count(),
+        'excusedCount'  => collect($attendanceMap)->where('status', 'excused')->count(),
+        'isLocked'      => $isLocked,
+        'isSunday'      => $isSunday,
+        'isPast'        => $isPast,
+        'isFuture'      => $isFuture,
+        'khmerDate'     => $this->formatKhmerDate($carbonDate),
+        'session'       => $session,
+    ]);
+}
 
-        $classId = $request->class_id;
-        $month   = (int) $request->month;
-        $year    = (int) $request->year;
+/**
+ * Detect current period based on time
+ */
+private function detectPeriod(): string
+{
+    $now = now();
+    $hour = (int) $now->format('H');
 
-        $validEnrollmentIds = Enrollment::where('class_id', $classId)
-            ->where('status', 'active')
-            ->pluck('id')
-            ->flip();
-
-        DB::transaction(function () use ($request, $classId, $month, $year, $validEnrollmentIds) {
-            // attendance[YYYY-MM-DD][enrollment_id] = status
-            foreach ($request->attendance as $date => $enrollmentStatuses) {
-                // Validate date belongs to this month/year
-                $carbonDate = Carbon::createFromFormat('Y-m-d', $date);
-                if ($carbonDate->month !== $month || $carbonDate->year !== $year) continue;
-
-                // Get or create the session for this date
-                $session = AttendanceSession::firstOrCreate(
-                    ['class_id' => $classId, 'session_date' => $date],
-                    ['subject_id' => null, 'period' => null, 'topic' => null]
-                );
-
-                foreach ($enrollmentStatuses as $enrollmentId => $status) {
-                    if (! isset($validEnrollmentIds[$enrollmentId])) continue;
-                    if (! in_array($status, ['present', 'absent', 'late', 'excused'])) continue;
-
-                    Attendance::updateOrCreate(
-                        [
-                            'enrollment_id'         => $enrollmentId,
-                            'attendance_session_id' => $session->id,
-                        ],
-                        ['status' => $status]
-                    );
-                }
-            }
-        });
-
-        return redirect()->route('admin.student-attendance.sheet', [
-            'class_id' => $classId,
-            'month'    => $month,
-            'year'     => $year,
-        ])->with('success', 'Attendance saved successfully.');
+    if ($hour < 12) {
+        return 'morning';
     }
+
+    return 'afternoon';
+}
+
+public function save(Request $request)
+{
+    $request->validate([
+        'class_id'    => ['required', 'exists:classes,id'],
+        'date'        => ['required', 'date'],
+        'period'      => ['required', 'in:morning,afternoon'],
+        'attendance'  => ['required', 'array'],
+        'attendance.*.enrollment_id' => ['required', 'exists:enrollments,id'],
+        'attendance.*.status'        => ['required', 'in:present,absent,late,excused'],
+        'attendance.*.notes'         => ['nullable', 'string', 'max:500'],
+    ]);
+
+    $classId = $request->class_id;
+    $date    = $request->date;
+    $period  = $request->period;
+
+    // Get or create session
+    $session = AttendanceSession::firstOrCreate(
+        ['class_id' => $classId, 'session_date' => $date, 'period' => $period],
+        ['subject_id' => null, 'topic' => null]
+    );
+
+    // Check lock
+    if (!$session->canEdit(auth()->user())) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Session is locked and cannot be edited.'
+        ], 403);
+    }
+
+    // Valid enrollment IDs for this class
+    $validEnrollmentIds = Enrollment::where('class_id', $classId)
+        ->where('status', 'active')
+        ->pluck('id')
+        ->flip();
+
+    DB::transaction(function () use ($request, $session, $validEnrollmentIds) {
+        foreach ($request->attendance as $item) {
+            $enrollmentId = $item['enrollment_id'];
+            
+            if (!isset($validEnrollmentIds[$enrollmentId])) continue;
+
+            Attendance::updateOrCreate(
+                [
+                    'enrollment_id'         => $enrollmentId,
+                    'attendance_session_id' => $session->id,
+                ],
+                [
+                    'status' => $item['status'],
+                    'notes'  => $item['notes'] ?? null,
+                ]
+            );
+        }
+    });
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Attendance saved successfully.',
+        'saved_count' => count($request->attendance),
+    ]);
+}
+/**
+ * Format date in Khmer
+ */
+private function formatKhmerDate(\Carbon\Carbon $date): string
+{
+    $days = [
+        'Sunday'    => 'ថ្ងៃអាទិត្យ',
+        'Monday'    => 'ថ្ងៃច័ន្ទ',
+        'Tuesday'   => 'ថ្ងៃអង្គារ',
+        'Wednesday' => 'ថ្ងៃពុធ',
+        'Thursday'  => 'ថ្ងៃព្រហស្បតិ៍',
+        'Friday'    => 'ថ្ងៃសុក្រ',
+        'Saturday'  => 'ថ្ងៃសៅរ៍',
+    ];
+
+    $months = [
+        1  => 'មករា',   2  => 'កុម្ភ',    3  => 'មីនា',
+        4  => 'មេសា',   5  => 'ឧសភា',    6  => 'មិថុនា',
+        7  => 'កក្កដា', 8  => 'សីហា',    9  => 'កញ្ញា',
+        10 => 'តុលា',   11 => 'វិច្ឆិកា', 12 => 'ធ្នូ',
+    ];
+
+    $khmerNumbers = ['០','១','២','៣','៤','៥','៦','៧','៨','៩'];
+    $day  = $date->format('j');
+    $year = $date->format('Y');
+
+    $khmerDay  = strtr($day,  array_combine(range('0','9'), $khmerNumbers));
+    $khmerYear = strtr($year, array_combine(range('0','9'), $khmerNumbers));
+
+    $dayName   = $days[$date->format('l')] ?? '';
+    $monthName = $months[$date->format('n')] ?? '';
+
+    return "{$dayName} ទី{$khmerDay} ខែ{$monthName} ឆ្នាំ{$khmerYear}";
+}
 }

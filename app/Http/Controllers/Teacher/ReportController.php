@@ -51,7 +51,7 @@ class ReportController extends Controller
 
     public function rankingIndex(): View
     {
-        return view('reports.ranking.index', [
+        return view('teacher.reports.ranking.index', [
             'classes'       => $this->teacherClasses(),
             'academicYears' => collect(),
         ]);
@@ -148,7 +148,7 @@ class ReportController extends Controller
         $rows           = collect($rawRows);
         $selectedPeriod = $request->period;
 
-        return view('reports.ranking.sheet', [
+        return view('teacher.reports.ranking.sheet', [
             'class'          => $class,
             'academicYear'   => $academicYear,
             'subjects'       => $subjects,
@@ -162,7 +162,7 @@ class ReportController extends Controller
 
     public function honorsIndex(): View
     {
-        return view('reports.honors.index', [
+        return view('teacher.reports.honors.index', [
             'classes'       => $this->teacherClasses(),
             'academicYears' => collect(),
         ]);
@@ -254,7 +254,7 @@ class ReportController extends Controller
         $rows           = collect($rawRows);
         $selectedPeriod = $request->period;
 
-        return view('reports.honors.sheet', [
+        return view('teacher.reports.honors.sheet', [
             'class'          => $class,
             'academicYear'   => $academicYear,
             'rows'           => $rows,
