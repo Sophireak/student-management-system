@@ -2,19 +2,22 @@
 
 @section('content')
 
-<div class="mb-4 flex items-center justify-between">
-    <div>
-        <h2 class="text-lg font-semibold text-gray-700">Monthly Score Report</h2>
-        <p class="text-sm text-gray-400 mt-0.5">
-            {{ $class->name }}
-            · {{ $class->grade->name }}
-            · Month {{ $month }} — {{ $monthName }}
-        </p>
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5 shadow-sm flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+            <i class="ti ti-calendar-stats text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-lg font-bold text-gray-800 leading-tight">Monthly Score Report</h1>
+            <p class="text-xs text-gray-500 mt-0.5">
+                {{ $class->name }} · {{ $class->grade->name }} · Month {{ $month }} — {{ $monthName }}
+            </p>
+        </div>
     </div>
     @if ($isLocked)
-        <span class="px-3 py-1 text-xs font-semibold bg-red-100
+        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-red-50 border border-red-200
                      text-red-700 rounded-full">
-            🔒 Locked by Admin
+            <i class="ti ti-lock text-sm"></i> Locked by Admin
         </span>
     @endif
 </div>
@@ -23,7 +26,7 @@
     $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
 @endphp
 
-@include('partials.monthly-report-filters', [
+@include('partials.monthly-report-filters-teacher', [
     'classes'         => $classes,
     'months'          => $months,
     'academicYears'   => collect(),

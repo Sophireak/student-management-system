@@ -3,7 +3,8 @@
 @section('content')
 
 @php
-    $routePrefix = auth()->user()->isAdmin() ? 'admin' : 'teacher';
+    $isAdmin     = auth()->user()->isAdmin();
+    $routePrefix = $isAdmin ? 'admin' : 'teacher';
     $monthName   = Carbon\Carbon::create($year, $month)->format('F');
     $today       = Carbon\Carbon::today();
 @endphp
@@ -32,7 +33,7 @@
 @endif
 
 {{-- Filter bar --}}
-<div class="mb-4 bg-white rounded-xl border border-gray-200 px-4 py-3">
+<div class="mb-4 bg-white {{ $isAdmin ? 'rounded-xl' : 'rounded-2xl shadow-sm' }} border border-gray-200 px-4 py-3">
     <form method="GET"
           action="{{ route($routePrefix . '.student-attendance.sheet') }}"
           id="filter-form"

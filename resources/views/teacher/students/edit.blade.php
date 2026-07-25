@@ -3,17 +3,19 @@
 @section('content')
 
 {{-- Page Header --}}
-<div class="flex items-center gap-3 mb-6">
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5 shadow-sm flex items-center gap-3">
     <a href="{{ route('teacher.students.show', $student) }}"
-       class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-        <i class="ti ti-arrow-left text-base"></i> Back
+       class="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors flex-shrink-0">
+        <i class="ti ti-arrow-left text-base"></i>
     </a>
-    <span class="text-gray-300">/</span>
-    <h1 class="text-2xl font-bold text-gray-800">Edit {{ $student->full_name }}</h1>
+    <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+        <i class="ti ti-pencil text-green-600 text-xl"></i>
+    </div>
+    <h1 class="text-lg font-bold text-gray-800 leading-tight">Edit {{ $student->full_name }}</h1>
 </div>
 
 <div class="max-w-2xl">
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
         <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-5">Personal Information</h2>
 
         <form method="POST" action="{{ route('teacher.students.update', $student) }}">
@@ -160,12 +162,12 @@
             <div class="mt-6 flex items-center gap-3">
                 <button type="submit"
                         class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700
-                               text-white text-sm font-semibold rounded-lg transition-colors">
+                               text-white text-sm font-semibold rounded-full transition-colors">
                     <i class="ti ti-device-floppy text-base"></i> Save Changes
                 </button>
                 <a href="{{ route('teacher.students.show', $student) }}"
                    class="flex items-center gap-2 px-5 py-2.5 border border-gray-300 hover:bg-gray-50
-                          text-gray-600 text-sm font-medium rounded-lg transition-colors">
+                          text-gray-600 text-sm font-medium rounded-full transition-colors">
                     Cancel
                 </a>
             </div>

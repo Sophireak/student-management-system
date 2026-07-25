@@ -2,25 +2,29 @@
 
 @section('content')
 
-<div class="mb-4 flex items-center justify-between">
-    <div>
-        <h2 class="text-lg font-semibold text-gray-700">Annual Report</h2>
-        <p class="text-sm text-gray-400 mt-0.5">
-            {{ $class->name }} · {{ $class->grade->name }}
-            · {{ $academicYear->name }}
-        </p>
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5 shadow-sm flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+            <i class="ti ti-calendar-event text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-lg font-bold text-gray-800 leading-tight">Annual Report</h1>
+            <p class="text-xs text-gray-500 mt-0.5">
+                {{ $class->name }} · {{ $class->grade->name }} · {{ $academicYear->name }}
+            </p>
+        </div>
     </div>
     @if ($isLocked)
-        <span class="px-3 py-1 text-xs font-semibold bg-red-100
+        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-red-50 border border-red-200
                      text-red-700 rounded-full">
-            🔒 Final — Locked
+            <i class="ti ti-lock text-sm"></i> Final — Locked
         </span>
     @endif
 </div>
 
 @php $activeYear = \App\Models\AcademicYear::where('is_active', true)->first(); @endphp
 
-@include('partials.annual-report-filters', [
+@include('partials.annual-report-filters-teacher', [
     'classes'         => $classes,
     'academicYears'   => collect(),
     'routePrefix'     => 'teacher',

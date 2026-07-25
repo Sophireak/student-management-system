@@ -2,16 +2,23 @@
 
 @section('content')
 
-<div class="mb-4">
-    <h2 class="text-lg font-semibold text-gray-700">Annual Report</h2>
-    <p class="text-sm text-gray-400 mt-0.5">
-        View your class annual results.
-    </p>
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5 shadow-sm">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+            <i class="ti ti-calendar-event text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-lg font-bold text-gray-800 leading-tight">Annual Report</h1>
+            <span class="inline-flex items-center gap-1 mt-0.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                <i class="ti ti-filter text-sm"></i> View your class annual results
+            </span>
+        </div>
+    </div>
 </div>
 
 @php $activeYear = \App\Models\AcademicYear::where('is_active', true)->first(); @endphp
 
-@include('partials.annual-report-filters', [
+@include('partials.annual-report-filters-teacher', [
     'classes'         => $classes,
     'academicYears'   => collect(),
     'routePrefix'     => 'teacher',

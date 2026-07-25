@@ -2,9 +2,16 @@
 
 @section('content')
 
-@php $routePrefix = auth()->user()->isAdmin() ? 'admin' : 'teacher'; @endphp
+@php
+    $isAdmin     = auth()->user()->isAdmin();
+    $routePrefix = $isAdmin ? 'admin' : 'teacher';
+    $cardRadius  = $isAdmin ? 'rounded-xl' : 'rounded-2xl';
+    $cardShadow  = $isAdmin ? '' : 'shadow-sm';
+    $selRadius   = $isAdmin ? 'rounded-lg' : 'rounded-full';
+@endphp
 
 {{-- Page Header --}}
+@if ($isAdmin)
 <div class="mb-6 flex items-center gap-4">
     <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
         <i class="ti ti-calendar-check text-green-600 text-xl"></i>
@@ -14,9 +21,24 @@
         <p class="text-sm text-gray-500 mt-1">Select a class and month to view or fill the attendance sheet.</p>
     </div>
 </div>
+@else
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5 shadow-sm">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+            <i class="ti ti-calendar-check text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-lg font-bold text-gray-800 leading-tight">Student Attendance</h1>
+            <span class="inline-flex items-center gap-1 mt-0.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                <i class="ti ti-filter text-sm"></i> Select a class and month
+            </span>
+        </div>
+    </div>
+</div>
+@endif
 
 <div class="max-w-2xl">
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-white {{ $cardRadius }} border border-gray-200 overflow-hidden {{ $cardShadow }}">
 
         {{-- Card header strip --}}
         <div class="bg-green-50 border-b border-green-100 px-6 py-3 flex items-center gap-2">
@@ -35,7 +57,7 @@
                     <div class="relative">
                         <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
                         <select name="class_id" id="sel-class" required
-                                class="w-full appearance-none border border-gray-300 rounded-lg pl-9 pr-9 py-2.5 text-sm
+                                class="w-full appearance-none border border-gray-300 {{ $selRadius }} pl-9 pr-9 py-2.5 text-sm
                                        focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
                                        hover:border-green-300 transition-colors bg-white">
                             <option value="">— Select Class —</option>
@@ -62,7 +84,7 @@
                     <div class="relative">
                         <i class="ti ti-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
                         <select name="month" id="sel-month" required
-                                class="w-full appearance-none border border-gray-300 rounded-lg pl-9 pr-9 py-2.5 text-sm
+                                class="w-full appearance-none border border-gray-300 {{ $selRadius }} pl-9 pr-9 py-2.5 text-sm
                                        focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
                                        hover:border-green-300 transition-colors bg-white">
                             <option value="">— Select Month —</option>
@@ -82,7 +104,7 @@
                     <div class="relative">
                         <i class="ti ti-calendar-stats absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
                         <select name="year" id="sel-year" required
-                                class="w-full appearance-none border border-gray-300 rounded-lg pl-9 pr-9 py-2.5 text-sm
+                                class="w-full appearance-none border border-gray-300 {{ $selRadius }} pl-9 pr-9 py-2.5 text-sm
                                        focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
                                        hover:border-green-300 transition-colors bg-white">
                             <option value="">— Select Year —</option>
