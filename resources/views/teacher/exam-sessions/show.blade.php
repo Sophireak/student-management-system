@@ -1,4 +1,4 @@
-@extends('layouts.admin', ['title' => $examSession->full_label])
+@extends('layouts.teacher', ['title' => $examSession->full_label])
 
 @section('content')
 

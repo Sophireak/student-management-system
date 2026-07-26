@@ -14,26 +14,37 @@ use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $search = $request->input('search');
+    public function index(Request $request)
+{
+    $query = Student::query();
 
-        $students = Student::when($search, fn($q) =>
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('student_id', 'like', "%{$search}%")
-                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
-                  ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$search}%"])
-            )
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->paginate(20)
-            ->withQueryString();
-
-        $archivedCount = Student::onlyTrashed()->count();
-
-        return view('admin.students.index', compact('students', 'search', 'archivedCount'));
+    // Search
+    if ($search = $request->search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('first_name', 'like', "%{$search}%")
+              ->orWhere('last_name', 'like', "%{$search}%")
+              ->orWhere('student_id', 'like', "%{$search}%");
+        });
     }
+
+    // Gender filter
+    if ($gender = $request->gender) {
+        $query->where('gender', $gender);
+    }
+
+    $students = $query->latest()->paginate(20)->withQueryString();
+
+    // Counts for tabs
+    $totalStudents = Student::count();
+    $maleCount     = Student::where('gender', 'male')->count();
+    $femaleCount   = Student::where('gender', 'female')->count();
+    $archivedCount = Student::onlyTrashed()->count();
+
+    return view('admin.students.index', compact(
+        'students', 'search', 'totalStudents',
+        'maleCount', 'femaleCount', 'archivedCount'
+    ));
+}
 
     public function archived(Request $request): View
     {

@@ -50,4 +50,38 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
+    /**
+ * Login user via QR code token
+ */
+public function loginWithQr(Request $request): RedirectResponse
+{
+    $token = $request->query('token');
+
+    if (!$token) {
+        return redirect()->route('login')
+            ->withErrors(['username' => 'QR Code មិនត្រឹមត្រូវ']);
+    }
+
+    $user = \App\Models\User::where('login_token', $token)->first();
+
+    if (!$user) {
+        return redirect()->route('login')
+            ->withErrors(['username' => 'QR Code មិនត្រឹមត្រូវ ឬផុតកំណត់']);
+    }
+
+    Auth::login($user, true);
+    $request->session()->regenerate();
+
+    if ($user->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user->isTeacher()) {
+        return redirect()->route('teacher.dashboard');
+    }
+
+    return redirect('/');
+}
+
 }

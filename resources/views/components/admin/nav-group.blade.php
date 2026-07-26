@@ -1,20 +1,32 @@
-@props(['icon', 'label', 'routes' => []])
+@props(['icon', 'label'])
 
 @php
-    $isActiveGroup = collect($routes)->some(fn($r) => request()->routeIs($r . '*'));
+    $isActive = $isActiveGroup();
 @endphp
 
-<div x-data="{ open: {{ $isActiveGroup ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ $isActive ? 'true' : 'false' }} }">
     <button
-        @click="open = !open"
-        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors
-               {{ $isActiveGroup ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800' }}"
+        @click="expandIfCollapsed(); open = !open"
+        @class([
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium',
+            'bg-white/20 text-white' => $isActive,
+            'text-green-100 hover:bg-white/10 hover:text-white transition-colors duration-150' => !$isActive,
+        ])
     >
-        <i class="{{ $icon }} text-base {{ $isActiveGroup ? 'text-green-600' : 'text-gray-400' }}"></i>
-        <span class="flex-1 text-left sidebar-label">{{ $label }}</span>
-        <i class="ti ti-chevron-right text-sm transition-transform duration-200 sidebar-label"
-           :class="open ? 'rotate-90' : ''"></i>
+        <i @class([
+            $icon, 'text-lg',
+            'text-white' => $isActive,
+            'text-green-200' => !$isActive,
+        ])></i>
+        <span class="flex-1 text-left sidebar-label">
+            {{ $label }}
+        </span>
+        <i class="ti ti-chevron-right text-sm text-green-200 
+                  transition-transform duration-200 sidebar-label"
+           :class="open ? 'rotate-90' : ''"
+        ></i>
     </button>
+
     <div
         x-show="open"
         x-cloak
@@ -24,7 +36,8 @@
         x-transition:leave="transition ease-in duration-100"
         x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-1"
-        class="mt-0.5 ml-4 pl-3 border-l border-gray-100 space-y-0.5 sidebar-label"
+        class="mt-1 ml-4 pl-3 border-l border-green-400/30 
+               space-y-0.5 sidebar-group-children"
     >
         {{ $slot }}
     </div>

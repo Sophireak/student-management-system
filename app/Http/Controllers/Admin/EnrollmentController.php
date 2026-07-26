@@ -15,34 +15,37 @@ use Illuminate\View\View;
 
 class EnrollmentController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $search = $request->input('search');
-        $status = $request->input('status');
+    public function index(Request $request)
+{
+    $query = Enrollment::with(['student', 'schoolClass.grade', 'schoolClass.academicYear']);
 
-        $enrollments = Enrollment::with([
-            'student',
-            'schoolClass.grade',
-            'schoolClass.academicYear',
-        ])
-            ->when(
-                $search,
-                fn($q) =>
-                $q->whereHas(
-                    'student',
-                    fn($s) =>
-                    $s->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('student_id', 'like', "%{$search}%")
-                )
-            )
-            ->when($status, fn($q) => $q->where('status', $status))
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
-
-        return view('admin.enrollments.index', compact('enrollments', 'search', 'status'));
+    // Search
+    if ($search = $request->search) {
+        $query->whereHas('student', function ($q) use ($search) {
+            $q->where('first_name', 'like', "%{$search}%")
+              ->orWhere('last_name', 'like', "%{$search}%")
+              ->orWhere('student_id', 'like', "%{$search}%");
+        });
     }
+
+    // Status filter
+    if ($status = $request->status) {
+        $query->where('status', $status);
+    }
+
+    $enrollments = $query->latest('enrolled_at')->paginate(20)->withQueryString();
+
+    // Counts for tabs
+    $totalCount       = Enrollment::count();
+    $activeCount      = Enrollment::where('status', 'active')->count();
+    $transferredCount = Enrollment::where('status', 'transferred')->count();
+    $droppedCount     = Enrollment::where('status', 'dropped')->count();
+
+    return view('admin.enrollments.index', compact(
+        'enrollments', 'search', 'status',
+        'totalCount', 'activeCount', 'transferredCount', 'droppedCount'
+    ));
+}
 
     public function create(): View
     {

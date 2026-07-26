@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAcademicYearRequest extends FormRequest
 {
@@ -14,9 +15,16 @@ class UpdateAcademicYearRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => ['required', 'string', 'max:50', 'unique:academic_years,name,' . $this->academicYear->id],
+            'name'       => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('academic_years', 'name')
+                    ->ignore($this->academic_year->id),
+            ],
             'start_date' => ['required', 'date'],
             'end_date'   => ['required', 'date', 'after:start_date'],
+            'is_active'  => ['sometimes', 'boolean'],
         ];
     }
 

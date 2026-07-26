@@ -27,7 +27,7 @@ class ReportController extends Controller
 
     public function rankingIndex(): View
     {
-        return view('reports.ranking.index', $this->filterData());
+        return view('admin.reports.ranking.index', $this->filterData());
     }
 
     public function rankingSheet(Request $request): View
@@ -126,7 +126,7 @@ class ReportController extends Controller
         $rows           = collect($rawRows);
         $selectedPeriod = $request->period;
 
-        return view('reports.ranking.sheet', array_merge(
+        return view('admin.reports.ranking.sheet', array_merge(
             $this->filterData(),
             compact('class', 'academicYear', 'subjects', 'rows', 'periodLabel', 'selectedPeriod')
         ));
@@ -134,7 +134,7 @@ class ReportController extends Controller
 
     public function honorsIndex(): View
     {
-        return view('reports.honors.index', $this->filterData());
+        return view('admin.reports.honors.index', $this->filterData());
     }
 
     public function honorsSheet(Request $request): View
@@ -225,7 +225,7 @@ class ReportController extends Controller
         $rows           = collect($rawRows);
         $selectedPeriod = $request->period;
 
-        return view('reports.honors.sheet', array_merge(
+        return view('admin.reports.honors.sheet', array_merge(
             $this->filterData(),
             compact('class', 'academicYear', 'rows', 'periodLabel', 'topN', 'selectedPeriod')
         ));

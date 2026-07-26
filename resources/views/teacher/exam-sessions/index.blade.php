@@ -1,4 +1,4 @@
-@extends('layouts.admin', ['title' => 'My Exam Sessions'])
+@extends('layouts.teacher', ['title' => 'My Exam Sessions'])
 
 @section('content')
 

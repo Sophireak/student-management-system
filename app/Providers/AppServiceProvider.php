@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Pagination\Paginator;
 use App\View\Components\Admin\NavItem;
 use App\View\Components\Admin\StatCard;
 use App\Services\ReportService;
@@ -17,10 +18,18 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        // Use Tailwind pagination
+        Paginator::useTailwind();
+
         Blade::component('admin.nav-item', NavItem::class);
         Blade::component('admin.stat-card', StatCard::class);
         Blade::component('report.score-grid', ScoreGrid::class);
+
+        if (request()->header('X-Forwarded-Proto') === 'https') {
+            \URL::forceScheme('https');
+        }
     }
+
     public function register(): void
     {
         $this->app->singleton(ReportService::class);

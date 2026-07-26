@@ -77,4 +77,83 @@ class SubjectController extends Controller
     {
         return redirect()->route('admin.subjects.index');
     }
+  public function storeTemplate(Request $request): RedirectResponse
+{
+    $gradeId = $request->input('grade_id');
+
+    if (!$gradeId) {
+        return redirect()
+            ->route('admin.subjects.index')
+            ->with('error', 'Please select a grade to apply the template.');
+    }
+
+    $grade = Grade::findOrFail($gradeId);
+
+    $subjects = [
+        'សរសេរតាមអាន',
+        'អំណានយល់ន័យ',
+        'តែងសេចក្តី',
+        'គណិតវិទ្យា',
+        'វិទ្យាសាស្ត្រអនុវត្ត',
+        'សិក្សាសង្គម',
+        'អប់រំកាយ សុខភាព កីឡា',
+        'ស្តាប់',
+        'និយាយ',
+        'គំនូរ',
+        'អក្សរផ្ចង់',
+        'ភាសាបរទេស',
+        'វិន័យ-សីលធម៍រស់នៅ',
+        'កិច្ចការផ្ទះ',
+        'កីឡា-ពលកម្ម',
+        'អប់រំបំណិនជីវិតតាមមូលដ្ឋាន',
+    ];
+
+    $created = 0;
+    $restored = 0;
+    $skipped = 0;
+
+    foreach ($subjects as $name) {
+        $name = trim($name);
+
+        $existing = Subject::withTrashed()
+            ->where('grade_id', $gradeId)
+            ->where('name', $name)
+            ->first();
+
+        if ($existing) {
+            if ($existing->trashed()) {
+                $existing->restore();
+                $existing->update([
+                    'score_type' => $existing->score_type ?: 'numeric',
+                    'max_score'  => $existing->max_score ?: 100,
+                ]);
+                $restored++;
+            } else {
+                $skipped++;
+            }
+
+            continue;
+        }
+
+        Subject::create([
+            'grade_id'   => $gradeId,
+            'name'       => $name,
+            'score_type' => 'numeric',
+            'max_score'  => 100,
+        ]);
+
+        $created++;
+    }
+
+    $parts = [];
+    if ($created > 0) $parts[] = "{$created} created";
+    if ($restored > 0) $parts[] = "{$restored} restored";
+    if ($skipped > 0) $parts[] = "{$skipped} skipped";
+
+    $summary = empty($parts) ? 'No changes made' : implode(', ', $parts);
+
+    return redirect()
+        ->route('admin.subjects.index', ['grade_id' => $gradeId])
+        ->with('success', "Template applied to {$grade->name}: {$summary}.");
+}
 }

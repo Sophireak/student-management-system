@@ -2,111 +2,194 @@
 
 @section('content')
 
-{{-- Page Header --}}
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-800">Academic Years</h1>
-        <p class="text-sm text-gray-500 mt-1">Manage school academic years</p>
-    </div>
-    <a href="{{ route('admin.academic-years.create') }}"
-       class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
-        <i class="ti ti-calendar-plus text-base"></i> New Year
-    </a>
-</div>
+@php
+    $currentFilter = request('status', 'all');
+    $totalCount    = $totalCount ?? $academicYears->total();
+    $activeCount   = $activeCount ?? 0;
+    $inactiveCount = $inactiveCount ?? 0;
+@endphp
 
-{{-- Search --}}
-<div class="bg-white rounded-xl border border-gray-200 p-4 mb-5">
-    <form method="GET" action="" class="flex flex-wrap gap-3 items-end">
-        <div class="relative flex-1 min-w-48">
-            <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
-            <input type="text" name="search" value="{{ $search ?? '' }}"
-                   placeholder="Search academic years..."
-                   class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-        </div>
-        <button type="submit"
-                class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
-            <i class="ti ti-search text-base"></i> Search
-        </button>
-        @if ($search ?? false)
-            <a href="{{ route('admin.academic-years.index') }}"
-               class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-lg transition-colors">
-                <i class="ti ti-x text-base"></i> Clear
-            </a>
-        @endif
-    </form>
-</div>
+{{-- ========================================
+     TOOLBAR
+     ======================================== --}}
+<x-admin.page-toolbar>
+    <x-slot:left>
+        <x-admin.toolbar-tabs 
+            filter-key="status"
+            :tabs="[
+                ['key' => 'all',      'label' => 'All',      'count' => $totalCount,    'icon' => 'ti-calendar',       'color' => 'green'],
+                ['key' => 'active',   'label' => 'Active',   'count' => $activeCount,   'icon' => 'ti-circle-check',   'color' => 'green'],
+                ['key' => 'inactive', 'label' => 'Inactive', 'count' => $inactiveCount, 'icon' => 'ti-circle-dashed',  'color' => 'gray'],
+            ]" />
+    </x-slot:left>
 
-{{-- Table --}}
-<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-100 text-sm">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Start Date</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">End Date</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-            @forelse ($academicYears as $year)
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg {{ $year->is_active ? 'bg-green-100' : 'bg-gray-100' }} flex items-center justify-center flex-shrink-0">
-                                <i class="ti ti-calendar {{ $year->is_active ? 'text-green-600' : 'text-gray-400' }} text-sm"></i>
+    <x-slot:right>
+        <x-admin.toolbar-button 
+            href="{{ route('admin.academic-years.create') }}"
+            icon="ti-calendar-plus"
+            label="Add Year"
+            variant="primary" />
+    </x-slot:right>
+</x-admin.page-toolbar>
+
+{{-- ========================================
+     SEARCH
+     ======================================== --}}
+<x-admin.toolbar-search 
+    :action="route('admin.academic-years.index')"
+    placeholder="Search academic years..."
+    :value="$search ?? ''"
+    :preserve="['status' => request('status')]" />
+
+{{-- ========================================
+     TABLE
+     ======================================== --}}
+<div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-4">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-200">
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                        Academic Year
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap hidden sm:table-cell">
+                        Period
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                        Status
+                    </th>
+                    <th class="px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap text-right">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100/80">
+                @forelse ($academicYears as $year)
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+
+                        {{-- Year Name --}}
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center 
+                                            font-bold flex-shrink-0
+                                            {{ $year->is_active 
+                                                ? 'bg-gradient-to-br from-green-100 to-emerald-100 text-green-700' 
+                                                : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500' }}">
+                                    <i class="ti ti-calendar text-lg"></i>
+                                </div>
+                                <div>
+                                    <a href="{{ route('admin.academic-years.show', $year) }}"
+                                       class="text-sm font-bold text-gray-800 hover:text-green-600 transition-colors">
+                                        {{ $year->name }}
+                                    </a>
+                                    <p class="text-[11px] text-gray-400 mt-0.5 sm:hidden">
+                                        {{ $year->start_date?->format('M Y') }} — {{ $year->end_date?->format('M Y') }}
+                                    </p>
+                                </div>
                             </div>
-                            <span class="font-medium text-gray-800">{{ $year->name }}</span>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3 text-gray-500">{{ $year->start_date?->format('M d, Y') ?? '—' }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ $year->end_date?->format('M d, Y') ?? '—' }}</td>
-                    <td class="px-4 py-3">
-                        @if ($year->is_active)
-                            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
-                        @else
-                            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500">Inactive</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-1">
-                            <a href="{{ route('admin.academic-years.show', $year) }}"
-                               class="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors" title="View">
-                                <i class="ti ti-eye text-sm"></i>
-                            </a>
-                            <a href="{{ route('admin.academic-years.edit', $year) }}"
-                               class="p-1.5 rounded-lg bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition-colors" title="Edit">
-                                <i class="ti ti-pencil text-sm"></i>
-                            </a>
-                            @if (!$year->is_active)
-                                <form method="POST" action="{{ route('admin.academic-years.activate', $year) }}">
-                                    @csrf @method('PATCH')
-                                    <button type="submit"
-                                            class="p-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-colors" title="Activate">
-                                        <i class="ti ti-check text-sm"></i>
-                                    </button>
-                                </form>
+                        </td>
+
+                        {{-- Period --}}
+                        <td class="px-5 py-4 hidden sm:table-cell">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-1.5 text-sm text-gray-600">
+                                    <i class="ti ti-calendar-event text-gray-400 text-xs"></i>
+                                    {{ $year->start_date?->format('M d, Y') ?? '—' }}
+                                </div>
+                                <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                                    <i class="ti ti-calendar-due text-gray-400 text-xs"></i>
+                                    {{ $year->end_date?->format('M d, Y') ?? '—' }}
+                                </div>
+                            </div>
+                        </td>
+
+                        {{-- Status --}}
+                        <td class="px-5 py-4">
+                            @if($year->is_active)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs 
+                                             font-bold bg-green-50 text-green-700 border border-green-100">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                    Active
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs 
+                                             font-bold bg-gray-50 text-gray-500 border border-gray-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                    Inactive
+                                </span>
                             @endif
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="px-4 py-12 text-center">
-                        <i class="ti ti-calendar-off text-4xl text-gray-300 block mb-2"></i>
-                        <p class="text-gray-400 text-sm">No academic years found.</p>
-                        <a href="{{ route('admin.academic-years.create') }}"
-                           class="mt-3 inline-flex items-center gap-1 text-sm text-green-600 hover:underline">
-                            <i class="ti ti-calendar-plus"></i> Add first year
-                        </a>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                        </td>
+
+                        {{-- Actions --}}
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.academic-years.show', $year) }}"
+                                   class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-gray-50
+                                          hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-100 hover:border-blue-100"
+                                   title="View Details">
+                                    <i class="ti ti-eye text-lg"></i>
+                                </a>
+                                <a href="{{ route('admin.academic-years.edit', $year) }}"
+                                   class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-gray-50
+                                          hover:bg-amber-50 hover:text-amber-600 transition-all border border-gray-100 hover:border-amber-100"
+                                   title="Edit Year">
+                                    <i class="ti ti-pencil text-lg"></i>
+                                </a>
+                                @if(!$year->is_active)
+                                    <form method="POST" action="{{ route('admin.academic-years.activate', $year) }}"
+                                          onsubmit="return confirm('Set {{ $year->name }} as the active year? This will deactivate the current active year.')">
+                                        @csrf @method('PATCH')
+                                        <button type="submit"
+                                                class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-gray-50
+                                                       hover:bg-green-50 hover:text-green-600 transition-all border border-gray-100 hover:border-green-100"
+                                                title="Activate Year">
+                                            <i class="ti ti-check text-lg"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-5 py-16 text-center">
+                            <div class="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                <i class="ti ti-calendar-off text-2xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-800 mb-1">No academic years found</h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                @if($search)
+                                    No years match your search "{{ $search }}".
+                                @else
+                                    Get started by creating your first academic year.
+                                @endif
+                            </p>
+                            @if($search)
+                                <a href="{{ route('admin.academic-years.index') }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300
+                                          rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    Clear Search
+                                </a>
+                            @else
+                                <a href="{{ route('admin.academic-years.create') }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700
+                                          rounded-lg text-sm font-bold hover:bg-green-100 transition-colors">
+                                    <i class="ti ti-calendar-plus"></i> Add First Year
+                                </a>
+                            @endif
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<div class="mt-4">{{ $academicYears->links() }}</div>
+{{-- Pagination --}}
+@if($academicYears->hasPages())
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        {{ $academicYears->links() }}
+    </div>
+@endif
 
 @endsection
