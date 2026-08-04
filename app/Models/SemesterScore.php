@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\AcademicCalendar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -53,22 +54,13 @@ class SemesterScore extends Model
         return $this->belongsTo(User::class, 'entered_by');
     }
 
-    // Which months belong to each semester
     public static function semesterMonths(int $semester): array
     {
-        return match($semester) {
-            1 => [1, 2, 3, 4, 5],
-            2 => [6, 7, 8, 9],
-            default => [],
-        };
+        return AcademicCalendar::semesterMonths($semester);
     }
 
     public static function semesterLabel(int $semester): string
     {
-        return match($semester) {
-            1 => 'Semester 1 (September – January)',
-            2 => 'Semester 2 (February – May)',
-            default => 'Unknown',
-        };
+        return AcademicCalendar::semesterLabel($semester);
     }
 }

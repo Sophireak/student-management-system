@@ -84,23 +84,23 @@
             ]"
         >
             <x-admin.nav-item 
-                route="admin.monthly-report.index" 
+                route="admin.reports.index" 
                 icon="ti ti-calendar-stats" 
                 label="Monthly Report" />
             <x-admin.nav-item 
-                route="admin.semester-report.index" 
+                route="admin.reports.index" 
                 icon="ti ti-calendar-due" 
                 label="Semester Report" />
             <x-admin.nav-item 
-                route="admin.annual-report.index" 
+                route="admin.reports.index" 
                 icon="ti ti-calendar-event" 
                 label="Annual Report" />
             <x-admin.nav-item 
-                route="admin.reports.ranking.index" 
+                route="admin.reports.index" 
                 icon="ti ti-medal" 
                 label="Ranking" />
             <x-admin.nav-item 
-                route="admin.reports.honors.index" 
+                route="admin.reports.index" 
                 icon="ti ti-trophy" 
                 label="Honors" />
         </x-admin.nav-group>

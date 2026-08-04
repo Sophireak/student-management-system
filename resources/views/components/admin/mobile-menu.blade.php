@@ -152,35 +152,35 @@
             </button>
 
             <div x-show="reportsOpen" x-collapse class="ml-3 border-l-2 border-gray-100">
-                <a href="{{ route('admin.monthly-report.index') }}" @click="closeMenu()"
+                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
                    class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
                           hover:bg-gray-50 rounded-lg ml-2 transition-colors
                           {{ request()->routeIs('admin.monthly-report.*') ? 'text-green-700 font-semibold' : '' }}">
                     <i class="ti ti-calendar-stats text-sm {{ request()->routeIs('admin.monthly-report.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
                     Monthly Report
                 </a>
-                <a href="{{ route('admin.semester-report.index') }}" @click="closeMenu()"
+                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
                    class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
                           hover:bg-gray-50 rounded-lg ml-2 transition-colors
                           {{ request()->routeIs('admin.semester-report.*') ? 'text-green-700 font-semibold' : '' }}">
                     <i class="ti ti-calendar-due text-sm {{ request()->routeIs('admin.semester-report.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
                     Semester Report
                 </a>
-                <a href="{{ route('admin.annual-report.index') }}" @click="closeMenu()"
+                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
                    class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
                           hover:bg-gray-50 rounded-lg ml-2 transition-colors
                           {{ request()->routeIs('admin.annual-report.*') ? 'text-green-700 font-semibold' : '' }}">
                     <i class="ti ti-calendar-event text-sm {{ request()->routeIs('admin.annual-report.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
                     Annual Report
                 </a>
-                <a href="{{ route('admin.reports.ranking.index') }}" @click="closeMenu()"
+                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
                    class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
                           hover:bg-gray-50 rounded-lg ml-2 transition-colors
                           {{ request()->routeIs('admin.reports.ranking.*') ? 'text-green-700 font-semibold' : '' }}">
                     <i class="ti ti-medal text-sm {{ request()->routeIs('admin.reports.ranking.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
                     Ranking
                 </a>
-                <a href="{{ route('admin.reports.honors.index') }}" @click="closeMenu()"
+                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
                    class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
                           hover:bg-gray-50 rounded-lg ml-2 transition-colors
                           {{ request()->routeIs('admin.reports.honors.*') ? 'text-green-700 font-semibold' : '' }}">

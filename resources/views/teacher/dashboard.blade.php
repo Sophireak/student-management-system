@@ -113,7 +113,7 @@
             </p>
         </a>
 
-        <a href="{{ route('teacher.monthly-report.index') }}"
+        <a href="{{ route('teacher.reports.index') }}"
            class="bg-white border border-gray-200 rounded-xl p-4 
                   text-center hover:border-purple-300 hover:shadow-sm 
                   transition-all group active:scale-[0.98]">

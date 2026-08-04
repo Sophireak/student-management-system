@@ -26,7 +26,7 @@
 
         {{-- Reports --}}
         <x-teacher.nav-item 
-            route="teacher.monthly-report.index" 
+            route="teacher.reports.index" 
             icon="ti ti-chart-bar" 
             label="Reports"
             :matches="[

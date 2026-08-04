@@ -10,236 +10,211 @@ use App\Models\SchoolClass;
 use App\Models\SemesterScore;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    private function filterData(): array
+    /* ============================================================
+     |  INDEX — Filter page
+     |============================================================*/
+    public function index(): View
     {
-        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
-        $classes       = SchoolClass::with(['grade', 'academicYear'])
-            ->orderBy('academic_year_id', 'desc')
-            ->orderBy('grade_id')
+        $classes = SchoolClass::with('grade', 'academicYear')
             ->orderBy('name')
             ->get();
-        return compact('academicYears', 'classes');
+
+        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
+
+        return view('admin.reports.index', [
+            'classes'       => $classes,
+            'academicYears' => $academicYears,
+        ]);
     }
 
-    public function rankingIndex(): View
-    {
-        return view('admin.reports.ranking.index', $this->filterData());
-    }
-
-    public function rankingSheet(Request $request): View
+    /* ============================================================
+     |  PRINT — Generate report based on type
+     |============================================================*/
+    public function print(Request $request): View
     {
         $request->validate([
-            'class_id'         => ['required', 'exists:classes,id'],
-            'academic_year_id' => ['required', 'exists:academic_years,id'],
-            'period'           => ['required', 'string'],
+            'report'   => 'required|in:score-list,ranking,honor',
+            'class_id' => 'required|exists:classes,id',
+            'period'   => 'required|in:monthly,semester,annual',
+            'month'    => 'required_if:period,monthly|nullable|integer|between:1,12',
+            'semester' => 'required_if:period,semester|nullable|integer|in:1,2',
         ]);
 
-        [$type, $value] = explode('_', $request->period, 2);
+        $class         = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
+        $reportType    = $request->report;
+        $period        = $request->period;
+        $periodValue   = $period === 'monthly' ? $request->month : ($period === 'semester' ? $request->semester : null);
 
-        $class        = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
-        $academicYear = AcademicYear::findOrFail($request->academic_year_id);
-        $subjects     = Subject::where('grade_id', $class->grade_id)->orderBy('name')->get();
+        // Get subjects
+        $subjects = Subject::where('grade_id', $class->grade_id)
+            ->orderBy('name')
+            ->get();
 
-        $enrollments   = Enrollment::with('student')
+        // Get enrollments
+        $enrollments = Enrollment::with('student')
             ->where('class_id', $class->id)
             ->where('status', 'active')
-            ->orderBy('id')
-            ->get();
+            ->get()
+            ->sortBy(fn ($e) => $e->student->full_name ?? '')
+            ->values();
+
+        // Build score matrix
+        $matrix = $this->buildScoreMatrix($class, $period, $periodValue, $subjects, $enrollments);
+
+        // Calculate summary (total, average, rank)
+        $summary = $this->calculateSummary($enrollments, $subjects, $matrix);
+
+        // Calculate statistics
+        $statistics = $this->calculateStatistics($enrollments, $summary);
+
+        // Period label
+        $periodLabel = $this->periodLabel($period, $periodValue);
+
+        return view('admin.reports.print', [
+            'reportType'  => $reportType,
+            'class'       => $class,
+            'subjects'    => $subjects,
+            'enrollments' => $enrollments,
+            'matrix'      => $matrix,
+            'summary'     => $summary,
+            'statistics'  => $statistics,
+            'period'      => $period,
+            'periodValue' => $periodValue,
+            'periodLabel' => $periodLabel,
+            'academicYear' => $class->academicYear,
+        ]);
+    }
+
+    /* ============================================================
+     |  HELPERS
+     |============================================================*/
+    private function periodLabel(string $period, ?int $value): string
+{
+    if ($period === 'monthly') {
+        return 'ខែ ' . \App\Helpers\AcademicCalendar::monthName($value, 'kh');
+    }
+    if ($period === 'semester') {
+        return $value === 1 ? 'ឆមាសទី ១' : 'ឆមាសទី ២';
+    }
+    return 'ប្រចាំឆ្នាំ';
+}
+
+    private function buildScoreMatrix(SchoolClass $class, string $period, ?int $value, $subjects, $enrollments): array
+    {
         $enrollmentIds = $enrollments->pluck('id');
+        if ($enrollmentIds->isEmpty()) return [];
 
-        if ($type === 'month') {
-            $scores      = MonthlyScore::whereIn('enrollment_id', $enrollmentIds)
-                ->where('academic_year_id', $academicYear->id)
-                ->where('month', (int) $value)
-                ->get()
-                ->keyBy(fn($s) => "{$s->enrollment_id}:{$s->subject_id}");
-            $periodLabel = 'Month ' . $value . ' — ' . \App\Models\MonthlyScore::monthName((int) $value);
-        } else {
-            $scores      = SemesterScore::whereIn('enrollment_id', $enrollmentIds)
-                ->where('academic_year_id', $academicYear->id)
-                ->where('semester', (int) $value)
-                ->get()
-                ->keyBy(fn($s) => "{$s->enrollment_id}:{$s->subject_id}");
-            $periodLabel = \App\Models\SemesterScore::semesterLabel((int) $value);
+        $query = $period === 'monthly'
+            ? MonthlyScore::where('month', $value)
+            : SemesterScore::where('semester', $value);
+
+        $scores = $query->where('academic_year_id', $class->academic_year_id)
+            ->whereIn('enrollment_id', $enrollmentIds)
+            ->get();
+
+        $matrix = [];
+        foreach ($scores as $score) {
+            $matrix[$score->enrollment_id][$score->subject_id] = $score;
         }
+        return $matrix;
+    }
 
-        // Build rows as plain array
-        $rawRows = [];
+    private function calculateSummary($enrollments, $subjects, array $matrix): array
+    {
+        $summary = [];
+
         foreach ($enrollments as $enrollment) {
-            $numericTotal  = 0;
-            $numericCount  = 0;
-            $subjectScores = [];
+            $total = 0;
+            $count = 0;
 
             foreach ($subjects as $subject) {
-                $key   = "{$enrollment->id}:{$subject->id}";
-                $score = $scores->get($key);
-
-                if ($subject->isNumeric() && $score?->score !== null) {
-                    $numericTotal += $score->score;
-                    $numericCount++;
-                    $subjectScores[$subject->id] = $score->score;
-                } elseif ($subject->isGrade()) {
-                    $subjectScores[$subject->id] = $score?->grade ?? '—';
-                } else {
-                    $subjectScores[$subject->id] = $score?->pass_fail ?? '—';
+                $score = $matrix[$enrollment->id][$subject->id] ?? null;
+                if ($score && $score->score !== null) {
+                    $total += (float) $score->score;
+                    $count++;
                 }
             }
 
-            if ($type === 'semester') {
-                $anyScore = $scores->first(fn($s) => $s->enrollment_id === $enrollment->id);
-                $average  = $anyScore?->average_score ?? ($numericCount > 0 ? round($numericTotal / $numericCount, 2) : null);
-                $total    = $anyScore?->total_score   ?? ($numericCount > 0 ? round($numericTotal, 2) : null);
-            } else {
-                $average = $numericCount > 0 ? round($numericTotal / $numericCount, 2) : null;
-                $total   = $numericCount > 0 ? round($numericTotal, 2) : null;
-            }
-
-            $rawRows[] = [
-                'enrollment'     => $enrollment,
-                'subject_scores' => $subjectScores,
-                'total'          => $total,
-                'average'        => $average,
-                'letter_grade'   => $this->letterGrade($average),
-                'rank'           => null,
+            $summary[$enrollment->id] = [
+                'total'   => $count > 0 ? round($total, 2) : null,
+                'average' => $count > 0 ? round($total / $count, 2) : null,
+                'count'   => $count,
+                'rank'    => null,
             ];
         }
 
-        // Sort by average descending
-        usort($rawRows, fn($a, $b) => ($b['average'] ?? -1) <=> ($a['average'] ?? -1));
+        // Calculate rank
+        $ranked = collect($summary)
+            ->filter(fn ($s) => $s['average'] !== null)
+            ->sortByDesc('average')
+            ->keys();
 
-        // Assign dense rank
-        $rank    = 1;
-        $prevAvg = null;
-        foreach ($rawRows as $i => &$row) {
-            if ($prevAvg !== null && $row['average'] < $prevAvg) {
-                $rank = $i + 1;
-            }
-            $row['rank'] = $row['average'] !== null ? $rank : '—';
-            $prevAvg = $row['average'];
-        }
-        unset($row);
-
-        $rows           = collect($rawRows);
-        $selectedPeriod = $request->period;
-
-        return view('admin.reports.ranking.sheet', array_merge(
-            $this->filterData(),
-            compact('class', 'academicYear', 'subjects', 'rows', 'periodLabel', 'selectedPeriod')
-        ));
-    }
-
-    public function honorsIndex(): View
-    {
-        return view('admin.reports.honors.index', $this->filterData());
-    }
-
-    public function honorsSheet(Request $request): View
-    {
-        $request->validate([
-            'class_id'         => ['required', 'exists:classes,id'],
-            'academic_year_id' => ['required', 'exists:academic_years,id'],
-            'period'           => ['required', 'string'],
-            'top'              => ['nullable', 'integer', 'min:1', 'max:20'],
-        ]);
-
-        [$type, $value] = explode('_', $request->period, 2);
-
-        $class        = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
-        $academicYear = AcademicYear::findOrFail($request->academic_year_id);
-        $topN         = (int) ($request->top ?? 5);
-
-        $enrollments   = Enrollment::with('student')
-            ->where('class_id', $class->id)
-            ->where('status', 'active')
-            ->orderBy('id')
-            ->get();
-        $enrollmentIds = $enrollments->pluck('id');
-
-        if ($type === 'month') {
-            $scores      = MonthlyScore::whereIn('enrollment_id', $enrollmentIds)
-                ->where('academic_year_id', $academicYear->id)
-                ->where('month', (int) $value)
-                ->get()
-                ->keyBy(fn($s) => "{$s->enrollment_id}:{$s->subject_id}");
-            $periodLabel = 'Month ' . $value . ' — ' . \App\Models\MonthlyScore::monthName((int) $value);
-        } else {
-            $scores      = SemesterScore::whereIn('enrollment_id', $enrollmentIds)
-                ->where('academic_year_id', $academicYear->id)
-                ->where('semester', (int) $value)
-                ->get()
-                ->keyBy(fn($s) => "{$s->enrollment_id}:{$s->subject_id}");
-            $periodLabel = \App\Models\SemesterScore::semesterLabel((int) $value);
+        foreach ($ranked as $index => $enrollmentId) {
+            $summary[$enrollmentId]['rank'] = $index + 1;
         }
 
-        $rawRows = [];
+        return $summary;
+    }
+
+    private function calculateStatistics($enrollments, array $summary): array
+    {
+        $total   = $enrollments->count();
+        $females = $enrollments->filter(fn ($e) => strtolower($e->student->gender ?? '') === 'female')->count();
+        $males   = $total - $females;
+
+        // Count by grade
+        $gradeCounts = [
+            'excellent' => 0, 'excellent_female' => 0,   // ល្អណាស់ 9-10
+            'very_good' => 0, 'very_good_female' => 0,   // ល្អ 8-8.99
+            'good'      => 0, 'good_female'      => 0,   // ល្អបង្គួរ 7-7.99
+            'average'   => 0, 'average_female'   => 0,   // មធ្យម 6-6.99
+            'weak'      => 0, 'weak_female'      => 0,   // ខ្សោយ 5-5.99
+            'fail'      => 0, 'fail_female'      => 0,   // ធ្លាក់ 0-4.99
+        ];
+
+        $totalWithScores = 0;
         foreach ($enrollments as $enrollment) {
-            $numericTotal = 0;
-            $numericCount = 0;
+            $avg = $summary[$enrollment->id]['average'] ?? null;
+            if ($avg === null) continue;
+            $totalWithScores++;
 
-            foreach ($subjects ?? Subject::where('grade_id', $class->grade_id)->get() as $subject) {
-                $key   = "{$enrollment->id}:{$subject->id}";
-                $score = $scores->get($key);
-                if ($subject->isNumeric() && $score?->score !== null) {
-                    $numericTotal += $score->score;
-                    $numericCount++;
-                }
-            }
+            $isFemale = strtolower($enrollment->student->gender ?? '') === 'female';
 
-            if ($type === 'semester') {
-                $anyScore = $scores->first(fn($s) => $s->enrollment_id === $enrollment->id);
-                $average  = $anyScore?->average_score ?? ($numericCount > 0 ? round($numericTotal / $numericCount, 2) : null);
-                $total    = $anyScore?->total_score   ?? ($numericCount > 0 ? round($numericTotal, 2) : null);
-            } else {
-                $average = $numericCount > 0 ? round($numericTotal / $numericCount, 2) : null;
-                $total   = $numericCount > 0 ? round($numericTotal, 2) : null;
-            }
+            $key = match(true) {
+                $avg >= 9.00 => 'excellent',
+                $avg >= 8.00 => 'very_good',
+                $avg >= 7.00 => 'good',
+                $avg >= 6.00 => 'average',
+                $avg >= 5.00 => 'weak',
+                default      => 'fail',
+            };
 
-            $rawRows[] = [
-                'enrollment'   => $enrollment,
-                'total'        => $total,
-                'average'      => $average,
-                'letter_grade' => $this->letterGrade($average),
-                'rank'         => null,
-            ];
+            $gradeCounts[$key]++;
+            if ($isFemale) $gradeCounts[$key . '_female']++;
         }
 
-        usort($rawRows, fn($a, $b) => ($b['average'] ?? -1) <=> ($a['average'] ?? -1));
+        $passCount       = $gradeCounts['excellent'] + $gradeCounts['very_good'] + $gradeCounts['good'] + $gradeCounts['average'];
+        $passFemale      = $gradeCounts['excellent_female'] + $gradeCounts['very_good_female'] + $gradeCounts['good_female'] + $gradeCounts['average_female'];
+        $failCount       = $gradeCounts['weak'] + $gradeCounts['fail'];
+        $failFemale      = $gradeCounts['weak_female'] + $gradeCounts['fail_female'];
 
-        $rawRows = array_slice($rawRows, 0, $topN);
-
-        $rank    = 1;
-        $prevAvg = null;
-        foreach ($rawRows as $i => &$row) {
-            if ($prevAvg !== null && $row['average'] < $prevAvg) {
-                $rank = $i + 1;
-            }
-            $row['rank'] = $row['average'] !== null ? $rank : '—';
-            $prevAvg = $row['average'];
-        }
-        unset($row);
-
-        $rows           = collect($rawRows);
-        $selectedPeriod = $request->period;
-
-        return view('admin.reports.honors.sheet', array_merge(
-            $this->filterData(),
-            compact('class', 'academicYear', 'rows', 'periodLabel', 'topN', 'selectedPeriod')
-        ));
+        return [
+            'total'            => $total,
+            'females'          => $females,
+            'males'            => $males,
+            'total_scored'     => $totalWithScores,
+            'grade_counts'     => $gradeCounts,
+            'pass_count'       => $passCount,
+            'pass_female'      => $passFemale,
+            'pass_percent'     => $totalWithScores > 0 ? round(($passCount / $totalWithScores) * 100, 2) : 0,
+            'fail_count'       => $failCount,
+            'fail_female'      => $failFemale,
+            'fail_percent'     => $totalWithScores > 0 ? round(($failCount / $totalWithScores) * 100, 2) : 0,
+        ];
     }
-
-    private function letterGrade(?float $average): string
-    {
-        if ($average === null) return '—';
-        return match(true) {
-            $average >= 80 => 'A',
-            $average >= 70 => 'B',
-            $average >= 60 => 'C',
-            $average >= 50 => 'D',
-            default        => 'E',
-        };
-    }
-}
+}   

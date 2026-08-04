@@ -13,9 +13,6 @@ use App\Http\Controllers\Admin\ClassTeacherController;
 use App\Http\Controllers\Admin\AttendanceSessionController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\StudentAttendanceController;
-use App\Http\Controllers\Admin\MonthlyReportController;
-use App\Http\Controllers\Admin\SemesterReportController;
-use App\Http\Controllers\Admin\AnnualReportController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ScoreController;
 
@@ -76,39 +73,10 @@ Route::middleware(['auth', 'verified', 'admin'])
             Route::get('/report',  [ScoreController::class, 'report'])->name('report');
         });
 
-        // ── Reports (Monthly / Semester / Annual) ─────────────────
-        Route::prefix('monthly-report')->name('monthly-report.')->group(function () {
-            Route::get('/',        [MonthlyReportController::class, 'index'])->name('index');
-            Route::get('/sheet',   [MonthlyReportController::class, 'show'])->name('show');
-            Route::post('/save',   [MonthlyReportController::class, 'save'])->name('save');
-            Route::post('/lock',   [MonthlyReportController::class, 'lock'])->name('lock');
-            Route::post('/unlock', [MonthlyReportController::class, 'unlock'])->name('unlock');
-        });
-
-        Route::prefix('semester-report')->name('semester-report.')->group(function () {
-            Route::get('/',           [SemesterReportController::class, 'index'])->name('index');
-            Route::get('/sheet',      [SemesterReportController::class, 'show'])->name('show');
-            Route::post('/calculate', [SemesterReportController::class, 'calculate'])->name('calculate');
-            Route::post('/save',      [SemesterReportController::class, 'save'])->name('save');
-            Route::post('/lock',      [SemesterReportController::class, 'lock'])->name('lock');
-            Route::post('/unlock',    [SemesterReportController::class, 'unlock'])->name('unlock');
-        });
-
-        Route::prefix('annual-report')->name('annual-report.')->group(function () {
-            Route::get('/',           [AnnualReportController::class, 'index'])->name('index');
-            Route::get('/sheet',      [AnnualReportController::class, 'show'])->name('show');
-            Route::post('/calculate', [AnnualReportController::class, 'calculate'])->name('calculate');
-            Route::post('/save',      [AnnualReportController::class, 'save'])->name('save');
-            Route::post('/lock',      [AnnualReportController::class, 'lock'])->name('lock');
-            Route::post('/unlock',    [AnnualReportController::class, 'unlock'])->name('unlock');
-        });
-
-        // ── Reports (Ranking / Honors) ────────────────────────────
+        // ── Reports (unified) ─────────────────────────────────────
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/ranking',       [ReportController::class, 'rankingIndex'])->name('ranking.index');
-            Route::get('/ranking/sheet', [ReportController::class, 'rankingSheet'])->name('ranking.sheet');
-            Route::get('/honors',        [ReportController::class, 'honorsIndex'])->name('honors.index');
-            Route::get('/honors/sheet',  [ReportController::class, 'honorsSheet'])->name('honors.sheet');
+            Route::get('/',      [ReportController::class, 'index'])->name('index');
+            Route::get('/print', [ReportController::class, 'print'])->name('print');
         });
 
         // ── User QR Code ──────────────────────────────────────────

@@ -61,16 +61,20 @@
                                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                     <option value="">— Select Period —</option>
                     <optgroup label="Monthly">
-                        @foreach ([1=>'September',2=>'October',3=>'November',4=>'December',5=>'January',6=>'February',7=>'March',8=>'April',9=>'May'] as $num => $name)
-                            <option value="month_{{ $num }}" {{ ($selectedPeriod ?? '') === 'month_'.$num ? 'selected' : '' }}>
-                                Month {{ $num }} — {{ $name }}
-                            </option>
-                        @endforeach
-                    </optgroup>
+    @foreach (\App\Helpers\AcademicCalendar::monthDropdown() as $num => $name)
+        <option value="month_{{ $num }}" {{ ($selectedPeriod ?? '') === 'month_'.$num ? 'selected' : '' }}>
+            Month {{ $num }} — {{ $name }}
+        </option>
+    @endforeach
+</optgroup>
                     <optgroup label="Semester">
-                        <option value="semester_1" {{ ($selectedPeriod ?? '') === 'semester_1' ? 'selected' : '' }}>Semester 1 (Sep – Jan)</option>
-                        <option value="semester_2" {{ ($selectedPeriod ?? '') === 'semester_2' ? 'selected' : '' }}>Semester 2 (Feb – May)</option>
-                    </optgroup>
+    <option value="semester_1" {{ ($selectedPeriod ?? '') === 'semester_1' ? 'selected' : '' }}>
+        {{ \App\Helpers\AcademicCalendar::semesterLabel(1) }}
+    </option>
+    <option value="semester_2" {{ ($selectedPeriod ?? '') === 'semester_2' ? 'selected' : '' }}>
+        {{ \App\Helpers\AcademicCalendar::semesterLabel(2) }}
+    </option>
+</optgroup>
                 </select>
             </div>
         </div>
