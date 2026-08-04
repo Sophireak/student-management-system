@@ -22,6 +22,9 @@ class StoreStudentRequest extends FormRequest
             'phone'         => ['nullable', 'string', 'max:20'],
             'address'       => ['nullable', 'string', 'max:255'],
 
+            // Photo
+            'photo'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+
             // Guardian info
             'guardian_name'         => ['nullable', 'string', 'max:100'],
             'guardian_phone'        => ['nullable', 'string', 'max:20'],
@@ -32,10 +35,12 @@ class StoreStudentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'date_of_birth.before' => 'Date of birth must be in the past.',
-            'gender.in'            => 'Gender must be male or female.',
-            'guardian_relationship.in' =>
-            'Relationship must be father, mother, or other.',
+            'date_of_birth.before'     => 'Date of birth must be in the past.',
+            'gender.in'                => 'Gender must be male or female.',
+            'guardian_relationship.in' => 'Relationship must be father, mother, or other.',
+            'photo.image'              => 'Photo must be an image file.',
+            'photo.mimes'              => 'Photo must be JPG, PNG, or WEBP.',
+            'photo.max'                => 'Photo size must not exceed 2MB.',
         ];
     }
 }

@@ -16,6 +16,7 @@ class Student extends Model
         'last_name',
         'date_of_birth',
         'gender',
+        'photo', 
         'phone',
         'address',
         'guardian_name',
@@ -34,6 +35,21 @@ class Student extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    // Photo URL accessor — returns full URL or empty string
+    public function getPhotoUrlAttribute(): string
+    {
+        if ($this->photo && \Storage::disk('public')->exists($this->photo)) {
+            return asset('storage/' . $this->photo);
+        }
+        return '';
+    }
+
+    // Check if student has a photo
+    public function hasPhoto(): bool
+    {
+        return $this->photo && \Storage::disk('public')->exists($this->photo);
     }
 
     // Student has many enrollments

@@ -21,6 +21,10 @@ class UpdateStudentRequest extends FormRequest
             'phone'         => ['nullable', 'string', 'max:20'],
             'address'       => ['nullable', 'string', 'max:255'],
 
+            // Photo
+            'photo'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_photo'  => ['nullable', 'boolean'],
+
             'guardian_name'         => ['nullable', 'string', 'max:100'],
             'guardian_phone'        => ['nullable', 'string', 'max:20'],
             'guardian_relationship' => ['nullable', 'in:father,mother,other'],
@@ -32,6 +36,9 @@ class UpdateStudentRequest extends FormRequest
         return [
             'date_of_birth.before'     => 'Date of birth must be in the past.',
             'guardian_relationship.in' => 'Relationship must be father, mother, or other.',
+            'photo.image'              => 'Photo must be an image file.',
+            'photo.mimes'              => 'Photo must be JPG, PNG, or WEBP.',
+            'photo.max'                => 'Photo size must not exceed 2MB.',
         ];
     }
 }
