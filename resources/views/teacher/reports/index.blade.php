@@ -102,24 +102,41 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                 {{-- Class --}}
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                        Class <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <select name="class_id" x-model="classId" required
-                                class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm
-                                       focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all">
-                            <option value="">— Select Class —</option>
-                            @foreach ($classes as $cls)
-                                <option value="{{ $cls->id }}">
-                                    {{ $cls->name }} ({{ $cls->grade->name }}) · {{ $cls->academicYear->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
+<div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+        Class <span class="text-red-500">*</span>
+    </label>
+
+    @if ($classes->count() === 1)
+        {{-- Single class: auto-select + show as display --}}
+        @php $singleClass = $classes->first(); @endphp
+        <input type="hidden" name="class_id" value="{{ $singleClass->id }}">
+        <div class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm text-gray-700 relative">
+            <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <span class="font-semibold">{{ $singleClass->name }}</span>
+            <span class="text-gray-400">
+                ({{ $singleClass->grade->name }}) · {{ $singleClass->academicYear->name }}
+            </span>
+            <i class="ti ti-lock absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm" 
+               title="You are assigned to this class only"></i>
+        </div>
+    @else
+        {{-- Multiple classes: show dropdown --}}
+        <div class="relative">
+            <i class="ti ti-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <select name="class_id" x-model="classId" required
+                    class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm
+                           focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all">
+                <option value="">— Select Class —</option>
+                @foreach ($classes as $cls)
+                    <option value="{{ $cls->id }}">
+                        {{ $cls->name }} ({{ $cls->grade->name }}) · {{ $cls->academicYear->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+</div>
 
                 {{-- Period Type --}}
                 <div>

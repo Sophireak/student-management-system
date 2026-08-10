@@ -49,8 +49,8 @@
             <th class="px-2 py-2 text-center font-semibold text-blue-900 w-16">ចំ.ថ្នាក់</th>
             <th class="px-2 py-2 text-center font-semibold text-blue-900 w-20">និទ្ទេស</th>
             <th class="px-2 py-2 text-center font-semibold text-blue-900 w-20">លទ្ធផល</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-20">អវត្តមាន</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-20">ផ្សេងៗ</th>
+            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-24">អវត្តមាន</th>
+<th class="px-2 py-2 text-center font-semibold text-blue-900 w-24">ផ្សេងៗ</th>
         </tr>
     </thead>
 
@@ -80,8 +80,28 @@
                         —
                     @endif
                 </td>
-                <td class="px-2 py-2 text-center">—</td>
-                <td class="px-2 py-2 text-center">—</td>
+                <td class="px-2 py-2 text-center whitespace-nowrap">
+    @php
+        $attendance = $attendanceCounts[$enrollment->id] ?? ['absent' => 0, 'late' => 0, 'excused' => 0];
+    @endphp
+    @if ($attendance['absent'] > 0)
+        <span class="text-red-600 font-semibold text-xs">{{ $attendance['absent'] }} ដង</span>
+    @else
+        —
+    @endif
+</td>
+<td class="px-2 py-2 text-center whitespace-nowrap">
+    @php
+        $notes = [];
+        if ($attendance['late'] > 0) $notes[] = 'យឺត ' . $attendance['late'];
+        if ($attendance['excused'] > 0) $notes[] = 'ច្បាប់ ' . $attendance['excused'];
+    @endphp
+    @if (!empty($notes))
+        <span class="text-[10px] text-gray-600">{{ implode(' · ', $notes) }}</span>
+    @else
+        —
+    @endif
+</td>
             </tr>
         @endforeach
     </tbody>

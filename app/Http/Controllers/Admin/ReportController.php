@@ -71,23 +71,25 @@ class ReportController extends Controller
 
         // Calculate statistics
         $statistics = $this->calculateStatistics($enrollments, $summary);
+        $attendanceCounts = $this->getAttendanceCounts($class, $period, $periodValue, $enrollments);
 
         // Period label
         $periodLabel = $this->periodLabel($period, $periodValue);
 
         return view('admin.reports.print', [
-            'reportType'  => $reportType,
-            'class'       => $class,
-            'subjects'    => $subjects,
-            'enrollments' => $enrollments,
-            'matrix'      => $matrix,
-            'summary'     => $summary,
-            'statistics'  => $statistics,
-            'period'      => $period,
-            'periodValue' => $periodValue,
-            'periodLabel' => $periodLabel,
-            'academicYear' => $class->academicYear,
-        ]);
+    'reportType'       => $reportType,
+    'class'            => $class,
+    'subjects'         => $subjects,
+    'enrollments'      => $enrollments,
+    'matrix'           => $matrix,
+    'summary'          => $summary,
+    'statistics'       => $statistics,
+    'attendanceCounts' => $attendanceCounts,
+    'period'           => $period,
+    'periodValue'      => $periodValue,
+    'periodLabel'      => $periodLabel,
+    'academicYear'     => $class->academicYear,
+]);
     }
 
     /* ============================================================
@@ -125,41 +127,66 @@ class ReportController extends Controller
     }
 
     private function calculateSummary($enrollments, $subjects, array $matrix): array
-    {
-        $summary = [];
+{
+    $summary = [];
 
-        foreach ($enrollments as $enrollment) {
-            $total = 0;
-            $count = 0;
+    foreach ($enrollments as $enrollment) {
+        $total = 0;
+        $count = 0;
 
-            foreach ($subjects as $subject) {
-                $score = $matrix[$enrollment->id][$subject->id] ?? null;
-                if ($score && $score->score !== null) {
-                    $total += (float) $score->score;
-                    $count++;
-                }
+        foreach ($subjects as $subject) {
+            $score = $matrix[$enrollment->id][$subject->id] ?? null;
+            if ($score && $score->score !== null) {
+                $total += (float) $score->score;
+                $count++;
             }
-
-            $summary[$enrollment->id] = [
-                'total'   => $count > 0 ? round($total, 2) : null,
-                'average' => $count > 0 ? round($total / $count, 2) : null,
-                'count'   => $count,
-                'rank'    => null,
-            ];
         }
 
-        // Calculate rank
-        $ranked = collect($summary)
-            ->filter(fn ($s) => $s['average'] !== null)
-            ->sortByDesc('average')
-            ->keys();
-
-        foreach ($ranked as $index => $enrollmentId) {
-            $summary[$enrollmentId]['rank'] = $index + 1;
-        }
-
-        return $summary;
+        $summary[$enrollment->id] = [
+            'total'   => $count > 0 ? round($total, 2) : null,
+            'average' => $count > 0 ? round($total / $count, 2) : null,
+            'count'   => $count,
+            'rank'    => null,
+        ];
     }
+
+    // Calculate rank with TIES handled correctly (Standard Competition Ranking)
+    // Example: 90, 90, 85 → ranks 1, 1, 3 (not 1, 2, 3)
+    $ranked = collect($summary)
+        ->filter(fn ($s) => $s['average'] !== null)
+        ->sortByDesc('average')
+        ->values();
+
+    $currentRank    = 0;
+    $previousAvg    = null;
+    $sameRankCount  = 0;
+
+    foreach ($ranked as $index => $item) {
+        if ($previousAvg === null || $item['average'] < $previousAvg) {
+            // New rank position
+            $currentRank    = $index + 1;
+            $sameRankCount  = 1;
+        } else {
+            // Same average as previous → same rank
+            $sameRankCount++;
+        }
+
+        // Find the enrollment_id for this item
+        $enrollmentId = collect($summary)->search(function ($s) use ($item) {
+            return $s['average'] === $item['average'] 
+                && $s['total'] === $item['total']
+                && $s['rank'] === null;
+        });
+
+        if ($enrollmentId !== false) {
+            $summary[$enrollmentId]['rank'] = $currentRank;
+        }
+
+        $previousAvg = $item['average'];
+    }
+
+    return $summary;
+}
 
     private function calculateStatistics($enrollments, array $summary): array
     {
@@ -217,4 +244,63 @@ class ReportController extends Controller
             'fail_percent'     => $totalWithScores > 0 ? round(($failCount / $totalWithScores) * 100, 2) : 0,
         ];
     }
+    /**
+ * Get attendance counts per enrollment for the report period
+ * Returns: [enrollment_id => ['absent' => X, 'late' => Y, 'excused' => Z]]
+ */
+private function getAttendanceCounts(SchoolClass $class, string $period, ?int $value, $enrollments): array
+{
+    $enrollmentIds = $enrollments->pluck('id');
+    if ($enrollmentIds->isEmpty()) return [];
+
+    // Determine which academic months to include
+    $academicMonths = match($period) {
+        'monthly'  => [$value],
+        'semester' => \App\Helpers\AcademicCalendar::semesterMonths($value),
+        'annual'   => range(1, 12),
+        default    => [],
+    };
+
+    // Convert academic months to real calendar months
+    // e.g., academic month 1 = October (calendar month 10)
+    $calendarMonths = [];
+    foreach ($academicMonths as $m) {
+        $monthName = \App\Helpers\AcademicCalendar::monthName($m, 'en');
+        if ($monthName) {
+            $calendarMonths[] = (int) date('n', strtotime($monthName));
+        }
+    }
+
+    if (empty($calendarMonths)) return [];
+
+    // Query attendance counts per enrollment + status
+    $records = \App\Models\Attendance::whereIn('enrollment_id', $enrollmentIds)
+        ->whereHas('attendanceSession', function ($q) use ($calendarMonths, $class) {
+            $q->whereIn(\DB::raw('MONTH(session_date)'), $calendarMonths)
+              ->where('class_id', $class->id);
+        })
+        ->selectRaw('enrollment_id, status, COUNT(*) as total')
+        ->groupBy('enrollment_id', 'status')
+        ->get();
+
+    // Build result map with defaults
+    $result = [];
+    foreach ($enrollments as $enrollment) {
+        $result[$enrollment->id] = [
+            'present' => 0,
+            'absent'  => 0,
+            'late'    => 0,
+            'excused' => 0,
+        ];
+    }
+
+    foreach ($records as $r) {
+        $status = strtolower($r->status);
+        if (isset($result[$r->enrollment_id][$status])) {
+            $result[$r->enrollment_id][$status] = (int) $r->total;
+        }
+    }
+
+    return $result;
+}
 }   

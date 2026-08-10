@@ -52,6 +52,7 @@ class ScoreController extends Controller
         if (! $classId || ! $selectedPeriod) {
             return view('teacher.scores.index', [
                 'classes'         => $classes,
+                'defaultClassId'  => $classes->count() === 1 ? $classes->first()->id : null,
                 'class'           => null,
                 'subjects'        => collect(),
                 'selectedPeriod'  => null,
@@ -88,6 +89,7 @@ class ScoreController extends Controller
 
         return view('teacher.scores.index', [
             'classes'         => $classes,
+            'defaultClassId'  => $classes->count() === 1 ? $classes->first()->id : null,
             'class'           => $class,
             'subjects'        => $subjects,
             'selectedPeriod'  => $selectedPeriod,
@@ -352,41 +354,66 @@ class ScoreController extends Controller
     }
 
     private function calculateSummary($enrollments, $subjects, array $matrix): array
-    {
-        $summary = [];
+{
+    $summary = [];
 
-        foreach ($enrollments as $enrollment) {
-            $total = 0;
-            $count = 0;
+    foreach ($enrollments as $enrollment) {
+        $total = 0;
+        $count = 0;
 
-            foreach ($subjects as $subject) {
-                $score = $matrix[$enrollment->id][$subject->id] ?? null;
-                if ($score && $score->score !== null) {
-                    $total += (float) $score->score;
-                    $count++;
-                }
+        foreach ($subjects as $subject) {
+            $score = $matrix[$enrollment->id][$subject->id] ?? null;
+            if ($score && $score->score !== null) {
+                $total += (float) $score->score;
+                $count++;
             }
-
-            $summary[$enrollment->id] = [
-                'total'   => $count > 0 ? round($total, 2) : null,
-                'average' => $count > 0 ? round($total / $count, 2) : null,
-                'count'   => $count,
-                'rank'    => null,
-            ];
         }
 
-        // Calculate rank
-        $ranked = collect($summary)
-            ->filter(fn ($s) => $s['average'] !== null)
-            ->sortByDesc('average')
-            ->keys();
-
-        foreach ($ranked as $index => $enrollmentId) {
-            $summary[$enrollmentId]['rank'] = $index + 1;
-        }
-
-        return $summary;
+        $summary[$enrollment->id] = [
+            'total'   => $count > 0 ? round($total, 2) : null,
+            'average' => $count > 0 ? round($total / $count, 2) : null,
+            'count'   => $count,
+            'rank'    => null,
+        ];
     }
+
+    // Calculate rank with TIES handled correctly (Standard Competition Ranking)
+    // Example: 90, 90, 85 → ranks 1, 1, 3 (not 1, 2, 3)
+    $ranked = collect($summary)
+        ->filter(fn ($s) => $s['average'] !== null)
+        ->sortByDesc('average')
+        ->values();
+
+    $currentRank    = 0;
+    $previousAvg    = null;
+    $sameRankCount  = 0;
+
+    foreach ($ranked as $index => $item) {
+        if ($previousAvg === null || $item['average'] < $previousAvg) {
+            // New rank position
+            $currentRank    = $index + 1;
+            $sameRankCount  = 1;
+        } else {
+            // Same average as previous → same rank
+            $sameRankCount++;
+        }
+
+        // Find the enrollment_id for this item
+        $enrollmentId = collect($summary)->search(function ($s) use ($item) {
+            return $s['average'] === $item['average'] 
+                && $s['total'] === $item['total']
+                && $s['rank'] === null;
+        });
+
+        if ($enrollmentId !== false) {
+            $summary[$enrollmentId]['rank'] = $currentRank;
+        }
+
+        $previousAvg = $item['average'];
+    }
+
+    return $summary;
+}
 
     private function extractScoreValues(array $entry, Subject $subject): ?array
     {

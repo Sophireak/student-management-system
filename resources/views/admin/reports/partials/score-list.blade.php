@@ -8,7 +8,16 @@
     .report-table { font-size: 10px; }
     .report-table th, .report-table td { border: 1px solid #1e3a8a; }
 </style>
-
+{{-- Cambodia National Header --}}
+<div class="text-center mb-4">
+    <h2 class="khmer-title text-lg font-bold">ព្រះរាជាណាចក្រកម្ពុជា</h2>
+    <p class="text-sm">ជាតិ សាសនា ព្រះមហាក្សត្រ</p>
+    <div class="flex items-center justify-center gap-2 my-2">
+        <div class="w-16 border-b border-gray-800"></div>
+        <div class="text-gray-800">✦</div>
+        <div class="w-16 border-b border-gray-800"></div>
+    </div>
+</div>
 {{-- School Header --}}
 <div class="mb-3">
     <p class="text-sm">{{ config('app.school_name', 'ការិយាល័យអប់រំ យុវជន និងកីឡា ក្រុងបាត់ដំបង') }}</p>
