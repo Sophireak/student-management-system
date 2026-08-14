@@ -264,7 +264,7 @@
                     <div class="brand">
                         <div class="brand-icon"><i class="ti ti-school"></i></div>
                         <div class="brand-text">
-                            <span class="brand-title">ប្រព័ន្ធគ្រប់គ្រងសិស្សសាលាបឋមសិក្សា សម្ដេច ជា ស៊ីម</span>
+                            <span class="brand-title">ប្រព័ន្ធគ្រប់គ្រងសិស្សសាលាបឋមសិក្សា</span>
                             <span class="brand-subtitle">School Management System</span>
                         </div>
                     </div>
@@ -303,7 +303,7 @@
                     <div class="mobile-brand">
                         <div class="mobile-brand-icon"><i class="ti ti-school"></i></div>
                         <div class="mobile-brand-text">
-                            <span class="mobile-brand-title">ប្រព័ន្ធគ្រប់គ្រងសិស្សសាលាបឋមសិក្សា សម្ដេច ជា ស៊ីម</span>
+                            <span class="mobile-brand-title">ប្រព័ន្ធគ្រប់គ្រងសិស្សសាលាបឋមសិក្សា</span>
                             <span class="mobile-brand-subtitle">School Management System</span>
                         </div>
                     </div>

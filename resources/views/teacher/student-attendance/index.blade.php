@@ -282,8 +282,9 @@
         </div>
 
 {{-- Bottom Save Bar --}}
-<div class="fixed bottom-16 left-0 right-0 z-30 
-            bg-white border-t border-gray-200 shadow-lg">
+<div class="fixed bottom-24 left-3 right-3 z-30 
+            bg-white/85 backdrop-blur-xl border border-white/80 
+            rounded-2xl shadow-lg shadow-green-900/10">
     <div class="max-w-7xl mx-auto px-4 py-3">
 
         {{-- Mobile: Compact --}}

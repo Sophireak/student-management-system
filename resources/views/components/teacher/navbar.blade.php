@@ -1,14 +1,19 @@
 @props(['title' => 'Dashboard'])
 
-<header class="h-14 bg-white border-b border-gray-200 
-               flex items-center justify-between 
-               px-4 flex-shrink-0 sticky top-0 z-30">
+<header class="sticky top-3 z-30 mx-3 mt-3
+               rounded-2xl bg-white/70 backdrop-blur-2xl
+               border border-white/80
+               shadow-lg shadow-green-900/10
+               h-14 flex items-center justify-between px-4">
 
     {{-- Left Side --}}
     <div class="flex items-center gap-3">
-        <span class="text-xl leading-none">🎓</span>
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-amber-400
+                    flex items-center justify-center flex-shrink-0 shadow-sm">
+            <i class="ti ti-school text-white text-base"></i>
+        </div>
         <div class="flex flex-col">
-            <span class="text-[10px] text-gray-400 
+            <span class="text-[10px] text-gray-500 
                          uppercase tracking-wider font-medium 
                          leading-tight">
                 {{ config('app.school_name') }}
@@ -24,8 +29,8 @@
     <div class="flex items-center gap-2">
 
         {{-- Notification Bell --}}
-        <button class="relative p-2 rounded-xl text-gray-400 
-                       hover:text-gray-600 hover:bg-gray-100 
+        <button class="relative p-2 rounded-xl text-gray-500 
+                       hover:text-gray-700 hover:bg-white/70 
                        transition-colors focus:outline-none"
                 aria-label="Notifications">
             <i class="ti ti-bell text-lg"></i>
@@ -37,12 +42,13 @@
             <button
                 @click="open = !open"
                 class="flex items-center gap-2 p-1 
-                       rounded-xl hover:bg-gray-100 
+                       rounded-xl hover:bg-white/70 
                        transition-colors focus:outline-none"
             >
                 <span class="inline-flex items-center justify-center 
-                             w-8 h-8 rounded-xl bg-green-100 
-                             text-green-700 font-bold text-sm">
+                             w-8 h-8 rounded-xl 
+                             bg-gradient-to-br from-green-500 to-amber-400
+                             text-white font-bold text-sm shadow-sm">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </span>
             </button>
@@ -57,16 +63,17 @@
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-                class="absolute right-0 mt-2 w-56 bg-white 
-                       border border-gray-200 rounded-xl 
-                       shadow-lg z-50 overflow-hidden"
+                class="absolute right-0 mt-2 w-56 
+                       bg-white/95 backdrop-blur-2xl
+                       border border-white/80 rounded-2xl 
+                       shadow-xl shadow-green-900/15 z-50 overflow-hidden"
             >
                 {{-- User Info --}}
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                <div class="px-4 py-3 bg-gradient-to-br from-green-50 to-amber-50 border-b border-gray-100">
                     <p class="text-sm font-semibold text-gray-800">
                         {{ auth()->user()->name }}
                     </p>
-                    <p class="text-xs text-gray-400 mt-0.5">
+                    <p class="text-xs text-gray-500 mt-0.5">
                         {{ auth()->user()->email }}
                     </p>
                     <span class="inline-block mt-1.5 px-2 py-0.5 
@@ -79,7 +86,7 @@
 
                 {{-- Class Info --}}
                 <div class="px-4 py-2.5 border-b border-gray-100">
-                    <p class="text-[10px] text-gray-400 uppercase 
+                    <p class="text-[10px] text-gray-500 uppercase 
                               tracking-wider font-medium">
                         Assigned Class
                     </p>
@@ -94,7 +101,7 @@
                        class="flex items-center gap-3 px-4 py-2.5 
                               text-sm text-gray-700 
                               hover:bg-gray-50 transition-colors">
-                        <i class="ti ti-user text-gray-400 text-lg"></i>
+                        <i class="ti ti-user text-gray-500 text-lg"></i>
                         My Profile
                     </a>
                 </div>

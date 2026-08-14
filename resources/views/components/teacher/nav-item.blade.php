@@ -11,19 +11,19 @@
 <a href="{{ route($route) }}"
    @class([
        'flex flex-col items-center justify-center gap-0.5 
-        py-1 px-2 rounded-xl transition-colors min-w-[3.5rem]',
-       'text-green-600' => $isActive,
-       'text-gray-400 hover:text-gray-600' => !$isActive,
+        py-1.5 px-3 rounded-2xl transition-all min-w-[3.5rem]',
+       'bg-gradient-to-br from-green-500 to-amber-400 shadow-sm shadow-green-900/20' => $isActive,
+       'text-gray-500 hover:text-gray-700' => !$isActive,
    ])
 >
     <i @class([
         $icon, 'text-xl',
-        'text-green-600' => $isActive,
+        'text-white' => $isActive,
         'text-gray-400' => !$isActive,
     ])></i>
     <span @class([
         'text-[10px] font-medium leading-tight',
-        'text-green-600' => $isActive,
+        'text-white' => $isActive,
         'text-gray-400' => !$isActive,
     ])>
         {{ $label }}
