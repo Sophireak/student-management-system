@@ -41,16 +41,24 @@
 <table class="w-full ranking-table border-collapse">
     <thead>
         <tr class="bg-blue-50">
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-12">ល.រ</th>
-            <th class="px-3 py-2 text-center font-semibold text-blue-900">គោត្តនាម នាម</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-14">ភេទ</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-16">ពិន្ទុ</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-16">មធ្យម</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-16">ចំ.ថ្នាក់</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-20">និទ្ទេស</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-20">លទ្ធផល</th>
-            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-24">អវត្តមាន</th>
-<th class="px-2 py-2 text-center font-semibold text-blue-900 w-24">ផ្សេងៗ</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-12 border border-blue-900">ល.រ</th>
+            <th rowspan="2" class="px-3 py-2 text-center font-semibold text-blue-900 border border-blue-900">គោត្តនាម នាម</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-14 border border-blue-900">ភេទ</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-16 border border-blue-900">ពិន្ទុ</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-16 border border-blue-900">មធ្យម</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-16 border border-blue-900">ចំ.ថ្នាក់</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-20 border border-blue-900">និទ្ទេស</th>
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-20 border border-blue-900">លទ្ធផល</th>
+            
+            {{-- Absent parent header (spans 2 columns) --}}
+            <th colspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 border border-blue-900">អវត្តមាន</th>
+            
+            <th rowspan="2" class="px-2 py-2 text-center font-semibold text-blue-900 w-20 border border-blue-900">ផ្សេងៗ</th>
+        </tr>
+        <tr class="bg-blue-50">
+            {{-- Sub-headers for Absent --}}
+            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-14 border border-blue-900">ច្បាប់</th>
+            <th class="px-2 py-2 text-center font-semibold text-blue-900 w-14 border border-blue-900">អច្បាប់</th>
         </tr>
     </thead>
 
@@ -60,6 +68,7 @@
                 $sum = $summary[$enrollment->id] ?? [];
                 $avg = $sum['average'] ?? null;
                 $grade = \App\Helpers\ScoreHelper::grade($avg);
+                $attendance = $attendanceCounts[$enrollment->id] ?? ['absent' => 0, 'late' => 0, 'excused' => 0];
             @endphp
             <tr>
                 <td class="px-2 py-2 text-center">{{ $index + 1 }}</td>
@@ -80,28 +89,25 @@
                         —
                     @endif
                 </td>
+
+                {{-- ច្បាប់ (With permission = excused) --}}
+                <td class="px-2 py-2 text-center">
+                    {{ $attendance['excused'] > 0 ? $attendance['excused'] : '—' }}
+                </td>
+
+                {{-- អច្បាប់ (Without permission = absent) --}}
+                <td class="px-2 py-2 text-center">
+                    {{ $attendance['absent'] > 0 ? $attendance['absent'] : '—' }}
+                </td>
+
+                {{-- ផ្សេងៗ (Others: late) --}}
                 <td class="px-2 py-2 text-center whitespace-nowrap">
-    @php
-        $attendance = $attendanceCounts[$enrollment->id] ?? ['absent' => 0, 'late' => 0, 'excused' => 0];
-    @endphp
-    @if ($attendance['absent'] > 0)
-        <span class="text-red-600 font-semibold text-xs">{{ $attendance['absent'] }} ដង</span>
-    @else
-        —
-    @endif
-</td>
-<td class="px-2 py-2 text-center whitespace-nowrap">
-    @php
-        $notes = [];
-        if ($attendance['late'] > 0) $notes[] = 'យឺត ' . $attendance['late'];
-        if ($attendance['excused'] > 0) $notes[] = 'ច្បាប់ ' . $attendance['excused'];
-    @endphp
-    @if (!empty($notes))
-        <span class="text-[10px] text-gray-600">{{ implode(' · ', $notes) }}</span>
-    @else
-        —
-    @endif
-</td>
+                    @if ($attendance['late'] > 0)
+                        <span class="text-[10px] text-gray-600">យឺត {{ $attendance['late'] }}</span>
+                    @else
+                        —
+                    @endif
+                </td>
             </tr>
         @endforeach
     </tbody>
