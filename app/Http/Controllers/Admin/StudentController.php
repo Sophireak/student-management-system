@@ -76,21 +76,26 @@ class StudentController extends Controller
     }
 
     public function forceDelete(int $id): RedirectResponse
-    {
-        $student = Student::onlyTrashed()->findOrFail($id);
+{
+    $student = Student::onlyTrashed()->findOrFail($id);
 
-        if ($student->enrollments()->withTrashed()->exists()) {
-            return redirect()
-                ->route('admin.students.archived')
-                ->with('error', 'Cannot permanently delete a student with enrollment records.');
-        }
-
-        $student->forceDelete();
-
+    if ($student->enrollments()->withTrashed()->exists()) {
         return redirect()
             ->route('admin.students.archived')
-            ->with('success', 'Student permanently deleted.');
+            ->with('error', 'Cannot permanently delete a student with enrollment records.');
     }
+
+    // Delete photo file too
+    if ($student->photo) {
+        \Storage::disk('public')->delete($student->photo);
+    }
+
+    $student->forceDelete();
+
+    return redirect()
+        ->route('admin.students.archived')
+        ->with('success', 'Student permanently deleted.');
+}
 
     public function create(): View
     {
@@ -98,16 +103,21 @@ class StudentController extends Controller
     }
 
     public function store(StoreStudentRequest $request): RedirectResponse
-    {
-        $data               = $request->validated();
-        $data['student_id'] = Student::generateStudentId();
+{
+    $data               = $request->validated();
+    $data['student_id'] = Student::generateStudentId();
 
-        Student::create($data);
-
-        return redirect()
-            ->route('admin.students.index')
-            ->with('success', 'Student created successfully.');
+    // Handle photo upload
+    if ($request->hasFile('photo')) {
+        $data['photo'] = $request->file('photo')->store('students', 'public');
     }
+
+    Student::create($data);
+
+    return redirect()
+        ->route('admin.students.index')
+        ->with('success', 'Student created successfully.');
+}
 
     public function show(Student $student): View
     {
@@ -154,13 +164,33 @@ class StudentController extends Controller
     }
 
     public function update(UpdateStudentRequest $request, Student $student): RedirectResponse
-    {
-        $student->update($request->validated());
+{
+    $data = $request->validated();
 
-        return redirect()
-            ->route('admin.students.index')
-            ->with('success', 'Student updated successfully.');
+    // Handle photo removal
+    if ($request->boolean('remove_photo') && $student->photo) {
+        \Storage::disk('public')->delete($student->photo);
+        $data['photo'] = null;
     }
+
+    // Handle new photo upload
+    if ($request->hasFile('photo')) {
+        // Delete old photo if exists
+        if ($student->photo) {
+            \Storage::disk('public')->delete($student->photo);
+        }
+        $data['photo'] = $request->file('photo')->store('students', 'public');
+    }
+
+    // Remove the remove_photo helper from data (not a real field)
+    unset($data['remove_photo']);
+
+    $student->update($data);
+
+    return redirect()
+        ->route('admin.students.index')
+        ->with('success', 'Student updated successfully.');
+}
 
     public function destroy(Student $student): RedirectResponse
     {

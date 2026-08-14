@@ -101,14 +101,19 @@
                             {{-- Student Profile --}}
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center 
-                                                justify-center font-bold shadow-inner 
-                                                flex-shrink-0
-                                                {{ $student->gender === 'female' 
-                                                    ? 'bg-gradient-to-br from-pink-100 to-rose-100 text-pink-700' 
-                                                    : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700' }}">
-                                        {{ strtoupper(substr($student->first_name, 0, 1)) }}
-                                    </div>
+                                    <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center 
+            justify-center font-bold shadow-inner flex-shrink-0
+            {{ $student->gender === 'female' 
+                ? 'bg-gradient-to-br from-pink-100 to-rose-100 text-pink-700' 
+                : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700' }}">
+    @if ($student->photo)
+        <img src="{{ asset('storage/' . $student->photo) }}" 
+             alt="{{ $student->full_name }}"
+             class="w-full h-full object-cover">
+    @else
+        {{ strtoupper(substr($student->first_name, 0, 1)) }}
+    @endif
+</div>
                                     <div>
                                         <a href="{{ route('admin.students.show', $student) }}" 
                                            class="text-sm font-bold text-gray-800 

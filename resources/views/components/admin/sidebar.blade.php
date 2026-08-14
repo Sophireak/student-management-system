@@ -72,38 +72,10 @@
 
         {{-- Reports --}}
         <div class="sidebar-section">Reports</div>
-        <x-admin.nav-group
-            icon="ti ti-chart-bar"
-            label="Reports"
-            :routes="[
-                'admin.monthly-report',
-                'admin.semester-report',
-                'admin.annual-report',
-                'admin.reports.ranking',
-                'admin.reports.honors'
-            ]"
-        >
-            <x-admin.nav-item 
-                route="admin.monthly-report.index" 
-                icon="ti ti-calendar-stats" 
-                label="Monthly Report" />
-            <x-admin.nav-item 
-                route="admin.semester-report.index" 
-                icon="ti ti-calendar-due" 
-                label="Semester Report" />
-            <x-admin.nav-item 
-                route="admin.annual-report.index" 
-                icon="ti ti-calendar-event" 
-                label="Annual Report" />
-            <x-admin.nav-item 
-                route="admin.reports.ranking.index" 
-                icon="ti ti-medal" 
-                label="Ranking" />
-            <x-admin.nav-item 
-                route="admin.reports.honors.index" 
-                icon="ti ti-trophy" 
-                label="Honors" />
-        </x-admin.nav-group>
+        <x-admin.nav-item 
+    route="admin.reports.index" 
+    icon="ti ti-file-report" 
+    label="Reports" />
 
         {{-- Academic Setup --}}
         <div class="sidebar-section">Academic Setup</div>

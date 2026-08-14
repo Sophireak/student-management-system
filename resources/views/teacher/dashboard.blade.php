@@ -115,10 +115,10 @@
             </p>
         </a>
 
-        <a href="{{ route('teacher.monthly-report.index') }}"
-           class="bg-white/75 backdrop-blur-xl border border-white/80 rounded-2xl p-4 
-                  text-center hover:bg-white/90 hover:shadow-lg 
-                  shadow-md shadow-green-900/10
+<a href="{{ route('teacher.reports.index') }}"
+            class="bg-white/75 backdrop-blur-xl border border-white/80 rounded-2xl p-4
+                text-center hover:bg-white/90 hover:shadow-lg
+                shadow-md shadow-green-900/10
                   transition-all group active:scale-[0.98]">
             <div class="w-12 h-12 rounded-xl bg-purple-50 
                         group-hover:bg-purple-100 
@@ -127,10 +127,10 @@
                 <i class="ti ti-chart-bar text-purple-600 text-2xl"></i>
             </div>
             <span class="text-sm font-semibold text-gray-700">
-                Monthly Report
-            </span>
-            <p class="text-[10px] text-gray-500 mt-0.5">
-                View monthly results
+    Reports
+</span>
+<p class="text-[10px] text-gray-500 mt-0.5">
+    View all reports
             </p>
         </a>
 

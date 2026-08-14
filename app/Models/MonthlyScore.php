@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\AcademicCalendar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -53,30 +54,19 @@ class MonthlyScore extends Model
         return $this->locked_at !== null;
     }
 
-    // Human-readable month name in Cambodian school calendar
+    /**
+     * Human-readable month name (Cambodia academic calendar)
+     */
     public static function monthName(int $month): string
     {
-        return match($month) {
-            1 => 'September',
-            2 => 'October',
-            3 => 'November',
-            4 => 'December',
-            5 => 'January',
-            6 => 'February',
-            7 => 'March',
-            8 => 'April',
-            9 => 'May',
-            default => 'Unknown',
-        };
+        return AcademicCalendar::monthName($month);
     }
 
-    // Which months belong to which semester
+    /**
+     * Get months for a semester
+     */
     public static function semesterMonths(int $semester): array
     {
-        return match($semester) {
-            1 => [1, 2, 3, 4, 5],   // Sep–Jan
-            2 => [6, 7, 8, 9],       // Feb–May
-            default => [],
-        };
+        return AcademicCalendar::semesterMonths($semester);
     }
 }

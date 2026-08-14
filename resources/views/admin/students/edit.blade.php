@@ -57,11 +57,130 @@
 {{-- ✅ Main Update Form — NO nested forms inside --}}
 <form method="POST" 
       action="{{ route('admin.students.update', $student) }}" 
+      enctype="multipart/form-data"
       class="space-y-5"
       id="update-form">
     @csrf
     @method('PUT')
 
+    {{-- Section 0: Photo Upload --}}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+     x-data="{ 
+        photoPreview: null,
+        removeExisting: false,
+        onPhotoChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                this.photoPreview = URL.createObjectURL(file);
+                this.removeExisting = false;
+            }
+        },
+        clearNewPhoto() {
+            this.photoPreview = null;
+            $refs.photoInput.value = '';
+        }
+     }">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center">
+            <i class="ti ti-camera text-pink-500 text-sm"></i>
+        </div>
+        <div>
+            <h2 class="text-sm font-bold text-gray-700">Student Photo</h2>
+            <p class="text-xs text-gray-400">Optional — JPG, PNG, WEBP · Max 2MB</p>
+        </div>
+    </div>
+
+    <div class="p-6 flex flex-col sm:flex-row items-center gap-6">
+        {{-- Preview --}}
+        <div class="w-32 h-40 rounded-xl border-2 border-dashed border-gray-300 
+                    bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+            {{-- New photo preview --}}
+            <template x-if="photoPreview">
+                <img :src="photoPreview" class="w-full h-full object-cover">
+            </template>
+
+            {{-- Existing photo (only if no new preview and not removing) --}}
+            @if ($student->photo)
+                <template x-if="!photoPreview && !removeExisting">
+                    <img src="{{ asset('storage/' . $student->photo) }}" 
+                         class="w-full h-full object-cover">
+                </template>
+            @endif
+
+            {{-- Empty placeholder --}}
+            <template x-if="!photoPreview && (removeExisting || {{ $student->photo ? 'false' : 'true' }})">
+                <div class="text-center text-gray-400">
+                    <i class="ti ti-photo text-4xl"></i>
+                    <p class="text-xs mt-2">No photo</p>
+                </div>
+            </template>
+        </div>
+
+        {{-- Controls --}}
+        <div class="flex-1 space-y-3 w-full">
+            <div class="flex flex-wrap gap-2">
+                <label class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 
+                              text-gray-700 text-sm font-semibold rounded-xl cursor-pointer 
+                              hover:bg-gray-50 transition-colors">
+                    <i class="ti ti-upload text-base"></i>
+                    {{ $student->photo ? 'Change Photo' : 'Choose Photo' }}
+                    <input type="file" name="photo" accept="image/*" 
+                           x-ref="photoInput"
+                           @change="onPhotoChange($event)"
+                           class="hidden">
+                </label>
+
+                {{-- Cancel new photo --}}
+                <button type="button"
+                        x-show="photoPreview"
+                        @click="clearNewPhoto()"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 
+                               text-gray-600 text-sm font-semibold rounded-xl 
+                               hover:bg-gray-200 transition-colors">
+                    <i class="ti ti-x text-base"></i>
+                    Cancel
+                </button>
+
+                {{-- Remove existing photo --}}
+                @if ($student->photo)
+                    <button type="button"
+                            x-show="!photoPreview && !removeExisting"
+                            @click="removeExisting = true"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 
+                                   text-red-600 text-sm font-semibold rounded-xl 
+                                   hover:bg-red-100 transition-colors">
+                        <i class="ti ti-trash text-base"></i>
+                        Remove Current
+                    </button>
+
+                    <button type="button"
+                            x-show="removeExisting"
+                            @click="removeExisting = false"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 
+                                   text-gray-600 text-sm font-semibold rounded-xl 
+                                   hover:bg-gray-200 transition-colors">
+                        <i class="ti ti-arrow-back-up text-base"></i>
+                        Undo
+                    </button>
+                @endif
+            </div>
+
+            {{-- Hidden field for removal --}}
+            <input type="hidden" name="remove_photo" :value="removeExisting ? '1' : '0'">
+
+            @error('photo')
+                <p class="text-xs text-red-600 flex items-center gap-1">
+                    <i class="ti ti-alert-circle"></i> {{ $message }}
+                </p>
+            @enderror
+
+            <p class="text-xs text-gray-400">
+                <i class="ti ti-info-circle"></i>
+                Photo will be shown in reports and student list.
+            </p>
+        </div>
+    </div>
+</div>
     {{-- Section 1: Identity --}}
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">

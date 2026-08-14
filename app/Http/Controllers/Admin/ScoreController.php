@@ -427,14 +427,39 @@ private function calculateSummary($enrollments, $subjects, array $matrix): array
         ];
     }
 
-    // Calculate rank (better version)
+    // Calculate rank with TIES handled correctly (Standard Competition Ranking)
+    // Example: 90, 90, 85 → ranks 1, 1, 3 (not 1, 2, 3)
     $ranked = collect($summary)
         ->filter(fn ($s) => $s['average'] !== null)
         ->sortByDesc('average')
-        ->keys();
+        ->values();
 
-    foreach ($ranked as $index => $enrollmentId) {
-        $summary[$enrollmentId]['rank'] = $index + 1;
+    $currentRank    = 0;
+    $previousAvg    = null;
+    $sameRankCount  = 0;
+
+    foreach ($ranked as $index => $item) {
+        if ($previousAvg === null || $item['average'] < $previousAvg) {
+            // New rank position
+            $currentRank    = $index + 1;
+            $sameRankCount  = 1;
+        } else {
+            // Same average as previous → same rank
+            $sameRankCount++;
+        }
+
+        // Find the enrollment_id for this item
+        $enrollmentId = collect($summary)->search(function ($s) use ($item) {
+            return $s['average'] === $item['average'] 
+                && $s['total'] === $item['total']
+                && $s['rank'] === null;
+        });
+
+        if ($enrollmentId !== false) {
+            $summary[$enrollmentId]['rank'] = $currentRank;
+        }
+
+        $previousAvg = $item['average'];
     }
 
     return $summary;
