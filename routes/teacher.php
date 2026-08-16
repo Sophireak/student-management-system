@@ -2,8 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Teacher\DashboardController;
-use App\Http\Controllers\Teacher\AttendanceSessionController;
-use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\StudentAttendanceController;
 use App\Http\Controllers\Teacher\ScoreController;
 use App\Http\Controllers\Teacher\ReportController;

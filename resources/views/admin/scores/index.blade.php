@@ -8,7 +8,7 @@
 @endphp
 
 {{-- Page Header --}}
-<div class="flex items-center justify-between mb-6">
+<div class="mb-5">
     <p class="text-sm text-gray-500">
         @if ($hasFilter)
             {{ $class->name }} · {{ $class->grade->name }} — {{ $periodLabel }}
@@ -16,13 +16,6 @@
             Select a class and period to begin.
         @endif
     </p>
-
-    @if ($hasFilter)
-        <a href="{{ route($routePrefix . '.scores.report', request()->query()) }}"
-           class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
-            <i class="ti ti-file-text text-base"></i> View Official Report
-        </a>
-    @endif
 </div>
 
 

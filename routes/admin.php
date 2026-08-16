@@ -10,8 +10,6 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\ClassTeacherController;
-use App\Http\Controllers\Admin\AttendanceSessionController;
-use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\StudentAttendanceController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ScoreController;
