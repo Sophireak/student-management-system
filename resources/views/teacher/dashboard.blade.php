@@ -2,31 +2,35 @@
 
 @section('content')
 
-{{-- Page Header --}}
-<div class="mb-6">
-    <div class="flex items-center gap-3 mb-1">
-        <div class="w-10 h-10 rounded-xl bg-green-100 
-                    flex items-center justify-center">
-            <span class="text-lg font-bold text-green-700">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-            </span>
-        </div>
-        <div>
-            <h1 class="text-lg font-bold text-gray-800">
-                Welcome back, {{ auth()->user()->name }}
-            </h1>
-            <p class="text-xs text-gray-400">
-                {{ now()->format('l, M d, Y') }}
-            </p>
-        </div>
-    </div>
+@php
+    $hour = now()->hour;
+    $greeting = $hour < 12 ? 'Good Morning' : ($hour < 18 ? 'Good Afternoon' : 'Good Evening');
+    $emoji    = $hour < 12 ? '☀️' : ($hour < 18 ? '👋' : '🌙');
+
+    // Smart action states
+    $hasClasses     = $classes->isNotEmpty();
+    $needAttendance = $todayAttendance && !$todayAttendance['taken'] && $hasClasses;
+    $needScores     = $scoreProgress && $scoreProgress['percent'] < 100;
+    $canViewReport  = $scoreProgress && $scoreProgress['percent'] >= 50;
+@endphp
+
+{{-- Greeting Header --}}
+<div class="mb-5">
+    <h1 class="text-xl font-bold text-gray-800">
+        {{ $greeting }}, {{ auth()->user()->name }} {{ $emoji }}
+    </h1>
+    <p class="text-xs text-gray-400 mt-0.5">
+        {{ now()->format('l, F d, Y') }}
+    </p>
 </div>
 
-{{-- Stat Cards --}}
+{{-- Stat Cards (Clickable) --}}
 <div class="grid grid-cols-3 gap-3 mb-6">
 
-    {{-- Assigned Classes --}}
-    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+    {{-- Classes --}}
+    <a href="#classes-list"
+       class="bg-white rounded-xl border border-gray-200 p-4 text-center 
+              hover:border-green-200 hover:shadow-sm transition-all">
         <div class="w-10 h-10 rounded-xl bg-green-50 ring-4 ring-green-100 
                     flex items-center justify-center mx-auto mb-2">
             <i class="ti ti-building text-green-500 text-lg"></i>
@@ -37,125 +41,131 @@
         <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
             Classes
         </p>
-    </div>
+    </a>
 
-    {{-- Total Students --}}
-    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+    {{-- Students --}}
+    <a href="{{ route('teacher.students.index') }}"
+       class="bg-white rounded-xl border border-gray-200 p-4 text-center 
+              hover:border-blue-200 hover:shadow-sm transition-all">
         <div class="w-10 h-10 rounded-xl bg-blue-50 ring-4 ring-blue-100 
                     flex items-center justify-center mx-auto mb-2">
             <i class="ti ti-users text-blue-500 text-lg"></i>
         </div>
         <p class="text-xl font-bold text-gray-800">
-            {{ $classes->sum('active_students') }}
+            {{ $totalStudents }}
         </p>
         <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
             Students
         </p>
-    </div>
+    </a>
 
-    {{-- Recent Sessions --}}
-    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+    {{-- Sessions --}}
+    <a href="{{ route('teacher.student-attendance.index') }}"
+       class="bg-white rounded-xl border border-gray-200 p-4 text-center 
+              hover:border-purple-200 hover:shadow-sm transition-all">
         <div class="w-10 h-10 rounded-xl bg-purple-50 ring-4 ring-purple-100 
                     flex items-center justify-center mx-auto mb-2">
             <i class="ti ti-calendar-check text-purple-500 text-lg"></i>
         </div>
         <p class="text-xl font-bold text-gray-800">
-            {{ $recentSessions->count() }}
+            {{ $totalSessions }}
         </p>
         <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
             Sessions
         </p>
-    </div>
+    </a>
 
 </div>
 
-{{-- Quick Actions --}}
+{{-- Smart Contextual Actions --}}
+@if ($hasClasses)
 <div class="mb-6">
-    <h2 class="text-xs font-bold text-gray-400 uppercase 
-               tracking-wider mb-3 px-1">
-        Quick Actions
+    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
+        What to do next
     </h2>
-    <div class="grid grid-cols-2 gap-3">
 
-        <a href="{{ route('teacher.student-attendance.index') }}"
-           class="bg-white border border-gray-200 rounded-xl p-4 
-                  text-center hover:border-green-300 hover:shadow-sm 
-                  transition-all group active:scale-[0.98]">
-            <div class="w-12 h-12 rounded-xl bg-green-50 
-                        group-hover:bg-green-100 
-                        flex items-center justify-center 
-                        mx-auto mb-2 transition-colors">
-                <i class="ti ti-calendar-check text-green-600 text-2xl"></i>
-            </div>
-            <span class="text-sm font-semibold text-gray-700">
-                Take Attendance
-            </span>
-            <p class="text-[10px] text-gray-400 mt-0.5">
-                Mark today's attendance
-            </p>
-        </a>
+    <div class="space-y-2">
 
-        <a href="{{ route('teacher.scores.index') }}"
-           class="bg-white border border-gray-200 rounded-xl p-4 
-                  text-center hover:border-blue-300 hover:shadow-sm 
-                  transition-all group active:scale-[0.98]">
-            <div class="w-12 h-12 rounded-xl bg-blue-50 
-                        group-hover:bg-blue-100 
-                        flex items-center justify-center 
-                        mx-auto mb-2 transition-colors">
-                <i class="ti ti-pencil text-blue-600 text-2xl"></i>
-            </div>
-            <span class="text-sm font-semibold text-gray-700">
-                Enter Scores
-            </span>
-            <p class="text-[10px] text-gray-400 mt-0.5">
-                Input exam scores
-            </p>
-        </a>
+        {{-- Attendance Task --}}
+        @if ($needAttendance)
+            <a href="{{ route('teacher.student-attendance.index') }}"
+               class="flex items-center gap-3 bg-white border border-amber-200 rounded-xl p-4 
+                      hover:border-amber-300 hover:shadow-sm transition-all">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-calendar-check text-amber-600 text-2xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-800">Take Today's Attendance</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        {{ $classes->first()->name }} · {{ $totalStudents }} students waiting
+                    </p>
+                </div>
+                <i class="ti ti-chevron-right text-amber-500 text-lg flex-shrink-0"></i>
+            </a>
+        @endif
 
-        <a href="{{ route('teacher.reports.index') }}"
-           class="bg-white border border-gray-200 rounded-xl p-4 
-                  text-center hover:border-purple-300 hover:shadow-sm 
-                  transition-all group active:scale-[0.98]">
-            <div class="w-12 h-12 rounded-xl bg-purple-50 
-                        group-hover:bg-purple-100 
-                        flex items-center justify-center 
-                        mx-auto mb-2 transition-colors">
-                <i class="ti ti-chart-bar text-purple-600 text-2xl"></i>
-            </div>
-            <span class="text-sm font-semibold text-gray-700">
-                Monthly Report
-            </span>
-            <p class="text-[10px] text-gray-400 mt-0.5">
-                View monthly results
-            </p>
-        </a>
+        {{-- Score Entry Task --}}
+        @if ($needScores)
+            <a href="{{ route('teacher.scores.index', [
+                    'class_id' => $scoreProgress['class']->id,
+                    'period'   => 'month_' . $scoreProgress['month'],
+                ]) }}"
+               class="flex items-center gap-3 bg-white border border-blue-200 rounded-xl p-4 
+                      hover:border-blue-300 hover:shadow-sm transition-all">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-pencil text-blue-600 text-2xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-800">Continue Score Entry</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        {{ $scoreProgress['month_name'] }} · 
+                        {{ $scoreProgress['filled'] }}/{{ $scoreProgress['total'] }} done ({{ $scoreProgress['percent'] }}%)
+                    </p>
+                </div>
+                <i class="ti ti-chevron-right text-blue-500 text-lg flex-shrink-0"></i>
+            </a>
+        @endif
 
-        <a href="{{ route('teacher.students.index') }}"
-           class="bg-white border border-gray-200 rounded-xl p-4 
-                  text-center hover:border-yellow-300 hover:shadow-sm 
-                  transition-all group active:scale-[0.98]">
-            <div class="w-12 h-12 rounded-xl bg-yellow-50 
-                        group-hover:bg-yellow-100 
-                        flex items-center justify-center 
-                        mx-auto mb-2 transition-colors">
-                <i class="ti ti-users text-yellow-600 text-2xl"></i>
+        {{-- View Report --}}
+        @if ($canViewReport)
+            <a href="{{ route('teacher.reports.index') }}"
+               class="flex items-center gap-3 bg-white border border-purple-200 rounded-xl p-4 
+                      hover:border-purple-300 hover:shadow-sm transition-all">
+                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-chart-bar text-purple-600 text-2xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-800">View Class Report</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        {{ $scoreProgress['month_name'] }} results ready
+                    </p>
+                </div>
+                <i class="ti ti-chevron-right text-purple-500 text-lg flex-shrink-0"></i>
+            </a>
+        @endif
+
+        {{-- All done --}}
+        @if (!$needAttendance && !$needScores && !$canViewReport)
+            <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-check text-green-600 text-2xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-green-800">All caught up! 🎉</p>
+                    <p class="text-xs text-green-600 mt-0.5">
+                        Nothing urgent to do right now.
+                    </p>
+                </div>
             </div>
-            <span class="text-sm font-semibold text-gray-700">
-                My Students
-            </span>
-            <p class="text-[10px] text-gray-400 mt-0.5">
-                View student list
-            </p>
-        </a>
+        @endif
 
     </div>
 </div>
+@endif
 
 {{-- My Classes --}}
-<div class="mb-6">
-    <h2 class="text-xs font-bold text-gray-400 uppercase 
-               tracking-wider mb-3 px-1">
+<div class="mb-6" id="classes-list">
+    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
         My Classes
     </h2>
 
@@ -166,24 +176,24 @@
                             p-4 flex items-center justify-between
                             hover:border-green-200 hover:shadow-sm 
                             transition-all">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
                         <div class="w-10 h-10 rounded-xl bg-green-50 
                                     flex items-center justify-center 
                                     flex-shrink-0">
                             <i class="ti ti-building text-green-600 text-lg"></i>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-gray-800 truncate">
                                 {{ $class->name }}
                             </p>
-                            <p class="text-xs text-gray-400">
+                            <p class="text-xs text-gray-400 truncate">
                                 {{ $class->grade->name }} · 
                                 {{ $class->academicYear->name }}
                             </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 px-2.5 py-1 
-                                rounded-lg bg-gray-50">
+                                rounded-lg bg-gray-50 flex-shrink-0 ml-2">
                         <i class="ti ti-users text-gray-400 text-sm"></i>
                         <span class="text-sm font-semibold text-gray-600">
                             {{ $class->active_students }}
@@ -211,8 +221,7 @@
 
 {{-- Recent Sessions --}}
 <div class="mb-6">
-    <h2 class="text-xs font-bold text-gray-400 uppercase 
-               tracking-wider mb-3 px-1">
+    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
         Recent Activity
     </h2>
 
@@ -235,13 +244,23 @@
                         </p>
                         <p class="text-xs text-gray-400">
                             {{ $session->session_date->format('M d, Y') }}
+                            <span class="text-gray-300">·</span>
+                            {{ $session->session_date->diffForHumans() }}
                         </p>
                     </div>
-                    <span class="text-[10px] font-semibold uppercase 
-                                 tracking-wide px-2 py-1 rounded-lg
-                                 bg-green-50 text-green-600 flex-shrink-0">
-                        Done
-                    </span>
+                    @if ($session->session_date->isToday())
+                        <span class="text-[10px] font-semibold uppercase 
+                                     tracking-wide px-2 py-1 rounded-lg
+                                     bg-blue-50 text-blue-600 flex-shrink-0">
+                            Today
+                        </span>
+                    @else
+                        <span class="text-[10px] font-semibold uppercase 
+                                     tracking-wide px-2 py-1 rounded-lg
+                                     bg-green-50 text-green-600 flex-shrink-0">
+                            Done
+                        </span>
+                    @endif
                 </div>
             @endforeach
         </div>

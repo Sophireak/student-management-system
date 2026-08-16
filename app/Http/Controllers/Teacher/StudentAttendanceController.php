@@ -30,11 +30,11 @@ class StudentAttendanceController extends AdminController
             ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
             ->orderBy('grade_id')->orderBy('name')->get();
 
+        // AUTO-SELECT if teacher has classes and no class_id in URL
+        if (!$classId && $classes->isNotEmpty()) {
+            $classId = $classes->first()->id;
+        }
 
-// AUTO-SELECT if teacher has classes and no class_id in URL
-if (!$classId && $classes->isNotEmpty()) {
-    $classId = $classes->first()->id;
-}
         // Empty state
         if (!$classId) {
             return view('teacher.student-attendance.index', [
@@ -124,15 +124,7 @@ if (!$classId && $classes->isNotEmpty()) {
                 ->get()
                 ->keyBy('enrollment_id');
 
-// Build map (auto-present visually, but no DB write)
-foreach ($enrollments as $enrollment) {
-    $record = $records->get($enrollment->id);
-    $attendanceMap[$enrollment->id] = [
-        'status' => $record?->status ?? 'present', // Default visual = present
-        'notes'  => $record?->notes ?? '',
-    ];
-}
-
+            // Build map (auto-present visually, but no DB write)
             foreach ($enrollments as $enrollment) {
                 $record = $records->get($enrollment->id);
                 $attendanceMap[$enrollment->id] = [
@@ -164,7 +156,7 @@ foreach ($enrollments as $enrollment) {
     }
 
     /**
-     * Public wrapper for private admin method
+     * Format date in Khmer
      */
     private function formatKhmerDateForTeacher(Carbon $date): string
     {
