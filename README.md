@@ -216,12 +216,9 @@ php artisan serve
 
 ```
 👤 Administrator
-   Email:    admin@krudesk.com
+   Email:    admin@school.edu.kh
    Password: password
 
-👩‍🏫 Teacher
-   Email:    teacher@krudesk.com
-   Password: password
 ```
 
 ---
