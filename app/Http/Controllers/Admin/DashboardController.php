@@ -27,6 +27,7 @@ class DashboardController extends Controller
         $totalStudents = Student::count();
         $totalTeachers = Teacher::count();
         $totalClasses = SchoolClass::count();
+        $totalSubjects = \App\Models\Subject::count();
         $totalEnrollments = Enrollment::where('status', 'active')->count();
 
         // Today's attendance rate
@@ -89,6 +90,7 @@ class DashboardController extends Controller
             'totalStudents',
             'totalTeachers',
             'totalClasses',
+            'totalSubjects',
             'totalEnrollments',
             'activeYear',
             'todayAttendance',

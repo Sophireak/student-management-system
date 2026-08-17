@@ -258,7 +258,8 @@
     $hasAlerts = !$activeYear 
         || $totalStudents === 0 
         || $totalTeachers === 0 
-        || $totalClasses === 0;
+        || $totalClasses === 0
+        || ($totalSubjects ?? 0) === 0;
 @endphp
 
 @if ($hasAlerts)
@@ -342,30 +343,30 @@
             </div>
         @endif
 
-        {{-- No Classes --}}
-        @if ($totalClasses === 0)
-            <div class="flex items-center gap-4 p-4 
-                        bg-amber-50 border border-amber-200 rounded-2xl">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 
-                            flex items-center justify-center flex-shrink-0">
-                    <i class="ti ti-building text-amber-500 text-lg"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-amber-700">
-                        No Classes Created
-                    </p>
-                    <p class="text-xs text-amber-400 mt-0.5">
-                        Create classes before enrolling students.
-                    </p>
-                </div>
-                <a href="{{ route('admin.classes.create') }}"
-                   class="flex-shrink-0 px-3 py-1.5 bg-amber-100 
-                          hover:bg-amber-200 text-amber-600 text-xs 
-                          font-bold rounded-lg transition-colors">
-                    Create →
-                </a>
-            </div>
-        @endif
+        {{-- No Subjects --}}
+@if (($totalSubjects ?? 0) === 0)
+    <div class="flex items-center gap-4 p-4 
+                bg-amber-50 border border-amber-200 rounded-2xl">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 
+                    flex items-center justify-center flex-shrink-0">
+            <i class="ti ti-book text-amber-500 text-lg"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-amber-700">
+                No Subjects Configured
+            </p>
+            <p class="text-xs text-amber-400 mt-0.5">
+                Add subjects so teachers can enter scores.
+            </p>
+        </div>
+        <a href="{{ route('admin.subjects.index') }}"
+           class="flex-shrink-0 px-3 py-1.5 bg-amber-100 
+                  hover:bg-amber-200 text-amber-600 text-xs 
+                  font-bold rounded-lg transition-colors">
+            Add →
+        </a>
+    </div>
+@endif
 
     </div>
 @endif
