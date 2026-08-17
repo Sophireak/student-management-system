@@ -156,7 +156,7 @@
                         <i class="ti ti-user text-gray-400 text-lg"></i>
                         My Profile
                     </a>
-                    <a href="#"
+                    <a href="{{ route('profile.edit') }}"
                        class="flex items-center gap-3 px-4 py-2.5 
                               text-sm font-medium text-gray-700 
                               hover:bg-gray-50 transition-colors">
