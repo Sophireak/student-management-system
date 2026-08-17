@@ -135,60 +135,22 @@
         </div>
 
         {{-- Reports --}}
-        <div class="px-5 pt-4 pb-1">
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Reports
-            </p>
-        </div>
+<div class="px-5 pt-4 pb-1">
+    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+        Reports
+    </p>
+</div>
 
-        <div x-data="{ reportsOpen: false }" class="px-3">
-            <button @click="reportsOpen = !reportsOpen"
-                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm 
-                           font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                <i class="ti ti-chart-bar text-gray-400 text-lg"></i>
-                <span class="flex-1 text-left">Reports</span>
-                <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform"
-                   :class="reportsOpen ? 'rotate-180' : ''"></i>
-            </button>
-
-            <div x-show="reportsOpen" x-collapse class="ml-3 border-l-2 border-gray-100">
-                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
-                   class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
-                          hover:bg-gray-50 rounded-lg ml-2 transition-colors
-                          {{ request()->routeIs('admin.monthly-report.*') ? 'text-green-700 font-semibold' : '' }}">
-                    <i class="ti ti-calendar-stats text-sm {{ request()->routeIs('admin.monthly-report.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
-                    Monthly Report
-                </a>
-                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
-                   class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
-                          hover:bg-gray-50 rounded-lg ml-2 transition-colors
-                          {{ request()->routeIs('admin.semester-report.*') ? 'text-green-700 font-semibold' : '' }}">
-                    <i class="ti ti-calendar-due text-sm {{ request()->routeIs('admin.semester-report.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
-                    Semester Report
-                </a>
-                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
-                   class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
-                          hover:bg-gray-50 rounded-lg ml-2 transition-colors
-                          {{ request()->routeIs('admin.annual-report.*') ? 'text-green-700 font-semibold' : '' }}">
-                    <i class="ti ti-calendar-event text-sm {{ request()->routeIs('admin.annual-report.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
-                    Annual Report
-                </a>
-                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
-                   class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
-                          hover:bg-gray-50 rounded-lg ml-2 transition-colors
-                          {{ request()->routeIs('admin.reports.ranking.*') ? 'text-green-700 font-semibold' : '' }}">
-                    <i class="ti ti-medal text-sm {{ request()->routeIs('admin.reports.ranking.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
-                    Ranking
-                </a>
-                <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
-                   class="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 
-                          hover:bg-gray-50 rounded-lg ml-2 transition-colors
-                          {{ request()->routeIs('admin.reports.honors.*') ? 'text-green-700 font-semibold' : '' }}">
-                    <i class="ti ti-trophy text-sm {{ request()->routeIs('admin.reports.honors.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
-                    Honors
-                </a>
-            </div>
-        </div>
+<div class="px-3">
+    <a href="{{ route('admin.reports.index') }}" @click="closeMenu()"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium 
+              {{ request()->routeIs('admin.reports.*') 
+                  ? 'bg-green-50 text-green-700' 
+                  : 'text-gray-700 hover:bg-gray-50' }} transition-colors">
+        <i class="ti ti-file-report text-lg {{ request()->routeIs('admin.reports.*') ? 'text-green-600' : 'text-gray-400' }}"></i>
+        Reports
+    </a>
+</div>
 
         {{-- Academic Setup --}}
         <div class="px-5 pt-4 pb-1">
