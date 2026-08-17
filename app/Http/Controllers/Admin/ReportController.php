@@ -43,9 +43,13 @@ class ReportController extends Controller
             'period'   => 'required|in:monthly,semester,annual',
             'month'    => 'required_if:period,monthly|nullable|integer|between:1,12',
             'semester' => 'required_if:period,semester|nullable|integer|in:1,2',
+            'report_date' => 'nullable|date',
         ]);
 
         $class         = SchoolClass::with('grade', 'academicYear')->findOrFail($request->class_id);
+        $reportDate = $request->report_date 
+    ? \Carbon\Carbon::parse($request->report_date) 
+    : now();
         $reportType    = $request->report;
         $period        = $request->period;
         $periodValue   = $period === 'monthly' ? $request->month : ($period === 'semester' ? $request->semester : null);
@@ -78,6 +82,7 @@ class ReportController extends Controller
 
         return view('admin.reports.print', [
     'reportType'       => $reportType,
+    'reportDate'       => $reportDate,
     'class'            => $class,
     'subjects'         => $subjects,
     'enrollments'      => $enrollments,

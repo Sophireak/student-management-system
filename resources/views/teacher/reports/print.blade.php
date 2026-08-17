@@ -13,6 +13,7 @@
     'period'      => $period,
     'periodLabel' => $periodLabel,
     'academicYear' => $academicYear,
+    'reportDate'  => $reportDate, 
 ])
 
 @endsection

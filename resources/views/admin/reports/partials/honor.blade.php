@@ -1,16 +1,16 @@
+@php use App\Helpers\KhmerDate; @endphp
+
 <style>
     @page { 
         size: A4 portrait; 
         margin: 1cm; 
     }
 
-    /* Force fit to one page */
     .honor-page {
-        max-height: 27cm;  /* A4 height minus margins */
+        max-height: 27cm;
         overflow: hidden;
     }
 
-    /* Reduce spacing when printing */
     @media print {
         .honor-page {
             page-break-inside: avoid;
@@ -30,7 +30,7 @@
 
 <div class="honor-page">
 
-    {{-- Cambodia Header (Compact) --}}
+    {{-- Cambodia National Header --}}
     <div class="text-center mb-2">
         <h2 class="khmer-title text-base font-bold">ព្រះរាជាណាចក្រកម្ពុជា</h2>
         <p class="text-xs">ជាតិ សាសនា ព្រះមហាក្សត្រ</p>
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    {{-- School Info (Compact) --}}
+    {{-- School Info --}}
     <div class="mb-2 text-xs">
         <p>{{ config('app.school_name', 'ការិយាល័យអប់រំ យុវជន និងកីឡា ក្រុងបាត់ដំបង') }}</p>
         <p>បឋមសិក្សា · {{ $class->name }}</p>
@@ -96,17 +96,11 @@
                     </div>
                     <div class="w-24 border-b-2 border-blue-400 mx-auto mb-1"></div>
                     <p class="text-xs font-bold">{{ $top5[0]->student->full_name }}</p>
-                    <p class="text-[10px] text-gray-500">
-                        {{ strtolower($top5[0]->student->gender ?? '') === 'female' ? 'ស្រី' : 'ប្រុស' }}
-                    </p>
-                    <p class="text-[10px]">
-                        ពិន្ទុ: {{ number_format($summary[$top5[0]->id]['average'] ?? 0, 2) }}
-                    </p>
                 </div>
             </div>
         @endif
 
-        {{-- 2nd & 3rd (Side by side - Smaller) --}}
+        {{-- 2nd & 3rd (Side by side) --}}
         <div class="flex justify-around gap-4">
             @foreach ([1, 2] as $index)
                 @if (isset($top5[$index]))
@@ -129,18 +123,12 @@
                         </div>
                         <div class="w-20 border-b-2 border-blue-400 mx-auto mb-1"></div>
                         <p class="text-xs font-bold">{{ $top5[$index]->student->full_name }}</p>
-                        <p class="text-[10px] text-gray-500">
-                            {{ strtolower($top5[$index]->student->gender ?? '') === 'female' ? 'ស្រី' : 'ប្រុស' }}
-                        </p>
-                        <p class="text-[10px]">
-                            ពិន្ទុ: {{ number_format($summary[$top5[$index]->id]['average'] ?? 0, 2) }}
-                        </p>
                     </div>
                 @endif
             @endforeach
         </div>
 
-        {{-- 4th & 5th (Side by side - Smaller) --}}
+        {{-- 4th & 5th (Side by side) --}}
         <div class="flex justify-around gap-4">
             @foreach ([3, 4] as $index)
                 @if (isset($top5[$index]))
@@ -163,12 +151,6 @@
                         </div>
                         <div class="w-20 border-b-2 border-blue-400 mx-auto mb-1"></div>
                         <p class="text-xs font-bold">{{ $top5[$index]->student->full_name }}</p>
-                        <p class="text-[10px] text-gray-500">
-                            {{ strtolower($top5[$index]->student->gender ?? '') === 'female' ? 'ស្រី' : 'ប្រុស' }}
-                        </p>
-                        <p class="text-[10px]">
-                            ពិន្ទុ: {{ number_format($summary[$top5[$index]->id]['average'] ?? 0, 2) }}
-                        </p>
                     </div>
                 @endif
             @endforeach
@@ -177,7 +159,7 @@
     </div>
     @endif
 
-    {{-- Signatures (Compact) --}}
+    {{-- Signatures --}}
     <div class="mt-4 grid grid-cols-2 gap-4 text-xs">
         <div class="text-center">
             <p>បានឃើញនិងឯកភាព</p>
@@ -186,7 +168,7 @@
         </div>
 
         <div class="text-center text-blue-700">
-            <p>{{ config('app.school_city', 'ក្រុងបាត់ដំបង') }} ថ្ងៃទី{{ now()->format('d') }} ខែ{{ now()->translatedFormat('F') }} ឆ្នាំ{{ now()->format('Y') }}</p>
+            <p>{{ config('app.school_city', 'ក្រុងបាត់ដំបង, ') }} {{ KhmerDate::format($reportDate) }}</p>
             <p class="font-bold mt-1">គ្រូទទួលបន្ទុកថ្នាក់</p>
             <div class="h-10"></div>
             <p class="font-semibold">{{ auth()->user()->name }}</p>

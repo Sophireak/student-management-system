@@ -204,6 +204,22 @@
                         </select>
                     </div>
                 </div>
+                {{-- Report Date (for signature) --}}
+<div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+        Report Date <span class="text-red-500">*</span>
+    </label>
+    <div class="relative">
+        <i class="ti ti-calendar-event absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input type="date" name="report_date" value="{{ now()->format('Y-m-d') }}"
+               class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm
+                      focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all">
+    </div>
+    <p class="text-xs text-gray-400 mt-1">
+        <i class="ti ti-info-circle"></i>
+        Date shown on report signature
+    </p>
+</div>
             </div>
 
             {{-- Actions --}}
