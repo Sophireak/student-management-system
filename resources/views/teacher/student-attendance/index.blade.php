@@ -182,7 +182,7 @@
 @endif
 
         {{-- Student Cards Grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-32 sm:pb-40">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-56 sm:pb-48">
             @foreach ($enrollments as $i => $enrollment)
                 @php
                     $status = $attendanceMap[$enrollment->id]['status'] ?? 'present';
@@ -285,7 +285,7 @@
 <div class="fixed bottom-24 left-3 right-3 z-30 
             bg-white/85 backdrop-blur-xl border border-white/80 
             rounded-2xl shadow-lg shadow-green-900/10">
-    <div class="max-w-7xl mx-auto px-4 py-3">
+    <div class="max-w-3xl mx-auto px-4 py-3">
 
         {{-- Mobile: Compact --}}
         <div class="flex items-center justify-between gap-2 sm:hidden">
